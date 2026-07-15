@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en" data-type="elegant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Ouroboros Map · Terrapin Ouroboros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Space+Grotesk:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="assets/terrapin.css" rel="stylesheet">
+<style>
+  body{overflow:hidden}
+  .maproot{display:grid;grid-template-columns:1fr 372px;height:calc(100vh - 63px)}
+  @media(max-width:880px){body{overflow:auto}.maproot{grid-template-columns:1fr;height:auto}}
+
+  .stagewrap{display:flex;flex-direction:column;min-width:0;min-height:0;position:relative}
+  .toolbar{display:flex;align-items:center;gap:8px;padding:11px clamp(12px,2.5vw,22px);
+    border-bottom:1px solid var(--line);background:rgba(10,6,22,.5);flex-wrap:wrap;z-index:5}
+  .toolbar input,.toolbar select{font-family:var(--ui);font-size:13.5px;color:var(--text);
+    background:rgba(160,123,255,.08);border:1px solid var(--line);border-radius:9px;padding:9px 12px;outline:none}
+  .toolbar input{min-width:170px}
+  .toolbar input::placeholder{color:var(--faint)}
+  .toolbar input:focus,.toolbar select:focus{border-color:var(--violet)}
+  .tb-btn{font-family:var(--ui);font-size:13px;color:var(--muted);background:rgba(160,123,255,.06);
+    border:1px solid var(--line);border-radius:9px;padding:9px 13px;transition:.14s}
+  .tb-btn:hover{color:var(--text);border-color:var(--violet);background:rgba(160,123,255,.18)}
+  .tb-btn:disabled{opacity:.38;cursor:default}
+  .crumb{font-family:var(--ui);font-size:13px;color:var(--warm);margin-left:auto;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .crumb b{color:var(--gold);font-weight:600}
+  .zoomlbl{font-family:var(--ui);font-size:12px;color:var(--faint);min-width:42px;text-align:center}
+
+  .stage{flex:1 1 auto;position:relative;overflow:hidden;min-height:0}
+  @media(max-width:880px){.stage{height:72vh}}
+  .map-canvas{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+  .legend{position:absolute;left:14px;bottom:12px;font-family:var(--ui);font-size:11px;color:var(--faint);
+    background:rgba(10,6,22,.6);border:1px solid var(--line);border-radius:9px;padding:7px 11px;z-index:4;backdrop-filter:blur(6px)}
+
+  /* side panel */
+  .side{border-left:1px solid var(--line);background:rgba(10,6,22,.46);overflow-y:auto;padding:22px 22px 40px}
+  @media(max-width:880px){.side{border-left:none;border-top:1px solid var(--line)}}
+  .side h2{font-size:30px;line-height:1.05;margin:0 0 4px}
+  .side .smv{font-family:var(--ui);font-size:13px;margin:0 0 14px}
+  .side p{color:#d4cbef;font-size:15px;line-height:1.6;margin:.4em 0}
+  .side .lead{font-size:16px;color:var(--text)}
+  .oribar{display:flex;height:9px;border-radius:5px;overflow:hidden;margin:12px 0 6px;border:1px solid var(--line)}
+  .oribar i{display:block;height:100%}
+  .songlist{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+  .songlist .schip{font-family:var(--ui);font-size:12.5px;border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;color:var(--muted);background:rgba(160,123,255,.06);cursor:pointer;transition:.13s}
+  .songlist .schip:hover{color:var(--text);border-color:var(--gold);background:rgba(243,198,79,.12)}
+  .side .howto{font-family:var(--ui);font-size:12.5px;color:var(--faint);line-height:1.6;
+    border-top:1px solid var(--line);margin-top:18px;padding-top:14px}
+  .open-btn{margin-top:14px}
+</style>
+</head>
+<body>
+<div class="maproot">
+  <div class="stagewrap">
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search songs…" autocomplete="off">
+      <select id="oriFilter"><option value="">All directionalities</option></select>
+      <button class="tb-btn" id="back" disabled>← Back</button>
+      <button class="tb-btn" onclick="MAP.zoom(1.18)">+</button>
+      <span class="zoomlbl" id="zlbl">100%</span>
+      <button class="tb-btn" onclick="MAP.zoom(.85)">−</button>
+      <button class="tb-btn" onclick="MAP.fit()">Fit</button>
+      <div class="crumb" id="crumb"><b>The Universe</b></div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="map-canvas" id="canvas"></div>
+      <div class="legend">Hover to glow · click a movement to drill in · click a star to open a song</div>
+    </div>
+  </div>
+  <aside class="side" id="side"></aside>
+</div>
+<script src="data/terrapin_data.js"></script>
+<script src="data/terrapin_stats.js"></script>
+<script src="assets/terrapin.js"></script>
+<script>
+const MAP=(function(){
+const T=window.Terra, MOVES=T.MOVEMENTS, SONGS=T.SONGS;
+const canvas=document.getElementById('canvas'), stage=document.getElementById('stage'), side=document.getElementById('side');
+const crumb=document.getElementById('crumb'), backBtn=document.getElementById('back');
+const polar=T.polar, esc=T.esc;
+let scale=1, level='universe', curMov=null, curGroup=null, savedSide='';
+let filterText='', filterDir='';
+
+function visibleKeys(){
+  if(!filterText && !filterDir) return null;
+  const q=filterText.toLowerCase(); const set=new Set();
+  SONGS.forEach(s=>{
+    if(q && !s.display_title.toLowerCase().includes(q)) return;
+    if(filterDir && s.directionality!==filterDir) return;
+    set.add(s.song_key_norm);
+  });
+  return set;
+}
+function applyScale(){canvas.style.transform=`scale(${scale})`;document.getElementById('zlbl').textContent=Math.round(scale*100)+'%';}
+function zoom(f){scale=Math.max(.4,Math.min(2.4,scale*f));applyScale();}
+function fit(){scale=1;applyScale();}
+function sizeFor(){return Math.max(320,Math.min(stage.clientWidth-40, stage.clientHeight-40, 780));}
+
+const lbl=T.floatLabel();
+function wireHover(el,text,onEnter,onLeave){
+  el.addEventListener('mouseenter',()=>{
+    el.parentNode.classList.add('dim'); el.classList.add('hot');
+    lbl.textContent=text; lbl.classList.add('show');
+    const r=el.getBoundingClientRect(); lbl.style.left=(r.left+r.width/2)+'px'; lbl.style.top=r.top+'px';
+    onEnter&&onEnter();
+  });
+  el.addEventListener('mouseleave',()=>{el.parentNode.classList.remove('dim');el.classList.remove('hot');lbl.classList.remove('show');onLeave&&onLeave();});
+}
+
+/* group a movement's songs by character archetype, then folklore, then directionality */
+function groupFor(records){
+  const tries=[
+    s=>(s.characters||[]).map(c=>c.archetype).filter(Boolean),
+    s=>(s.folklore||[]).map(f=>f.label||f.code),
+    s=>s.directionality?[T.dirLabel(s.directionality)]:[]
+  ];
+  let best=null,bestScore=-1;
+  for(const fn of tries){
+    const map=new Map();
+    records.forEach(s=>fn(s).forEach(v=>{if(!map.has(v))map.set(v,[]);map.get(v).push(s);}));
+    let arr=[...map.entries()].map(([label,songs])=>({label,songs})).filter(g=>g.songs.length>=2).sort((a,b)=>b.songs.length-a.songs.length).slice(0,12);
+    if(!arr.length) continue;
+    const covered=new Set(); arr.forEach(g=>g.songs.forEach(s=>covered.add(s.song_key_norm)));
+    const cov=covered.size/Math.max(records.length,1);
+    const balance=1-Math.abs(arr.length-8)/13;
+    const score=cov*0.7+balance*0.3;
+    if(score>bestScore){bestScore=score;best=arr;}
+  }
+  return best||records.slice(0,12).map(s=>({label:s.display_title,songs:[s]}));
+}
+
+function songChips(songs){return `<div class="songlist">${songs.map(s=>`<span class="schip" onclick="Terra.openSong('${esc(s.song_key_norm)}')">${esc(s.display_title)}</span>`).join('')}</div>`;}
+function dirDistribution(songs){
+  const counts={}; songs.forEach(s=>{if(s.directionality)counts[s.directionality]=(counts[s.directionality]||0)+1;});
+  const tot=Object.values(counts).reduce((a,b)=>a+b,0)||1;
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length) return '';
+  return `<div class="oribar">${sorted.map(([o,n])=>`<i style="width:${n/tot*100}%;background:${T.dirColor(o)}" title="${esc(T.dirLabel(o))}: ${n}"></i>`).join('')}</div>
+    <div style="font-family:var(--ui);font-size:11px;color:var(--faint)">directionality spread</div>`;
+}
+function setSide(html,save){side.innerHTML=html;if(save!==false)savedSide=html;}
+
+function universeSide(){
+  setSide(`<div class="kicker gold">The Ouroboros</div>
+    <h2 class="display">The Compass Always Points to Terrapin</h2>
+    <p class="lead">Thirteen movements of the Terrapin suite encircle Terrapin Station. Songs spiral around their movement-home like stars around a center of gravity.</p>
+    <div style="display:flex;gap:18px;margin-top:14px">
+      <div><div style="font-family:var(--serif);font-size:28px;color:var(--gold);line-height:1">${CATALOG_SONGS.length}</div><div style="font-family:var(--ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)">songs</div></div>
+      <div><div style="font-family:var(--serif);font-size:28px;color:var(--gold);line-height:1">XIII</div><div style="font-family:var(--ui);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)">movements</div></div>
+    </div>
+    <div class="howto">Hover any movement or star to focus it. Click a movement to drill into its clusters of shared archetypes and folklore. Click any star to open the full song.</div>`);
+}
+function movHoverSide(i){
+  const m=MOVES[i]; const def=T.movementDef(m.name);
+  const songs=(m.songs||[]).map(x=>T.songByKey(x.key)).filter(Boolean);
+  setSide(`<div class="kicker" style="color:${T.mvColor(i)}">Movement ${m.roman}</div>
+    <h2 class="display">${esc(m.name)}</h2>
+    <p class="smv" style="color:${T.mvColor(i)}">${songs.length} songs</p>
+    <p>${esc(def.body||'')}</p>
+    ${dirDistribution(songs)}
+    <p style="font-family:var(--ui);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:16px 0 0">Songs</p>
+    ${songChips(songs)}`,false);
+}
+function songHoverSide(key){
+  const s=T.songByKey(key); if(!s) return;
+  const mv=(s.primary_movements||[]);
+  setSide(`<div class="kicker" style="color:${T.mvColorByName(mv[0])}">Song</div>
+    <h2 class="display">${esc(s.display_title)}</h2>
+    <p class="smv" style="color:${T.mvColorByName(mv[0])}">${esc(mv.join(' · '))}</p>
+    <div class="chips" style="margin-bottom:10px">${s.directionality?T.dirChip(s.directionality):''}</div>
+    <p class="lead">${esc(s.interpretive_summary||'')}</p>
+    <button class="btn gold open-btn" onclick="Terra.openSong('${esc(key)}')">Open full record →</button>`,false);
+}
+
+function renderUniverse(){
+  level='universe'; curMov=null; curGroup=null; backBtn.disabled=true;
+  crumb.innerHTML='<b>The Universe</b>';
+  canvas.innerHTML='';
+  T.universeWheel(canvas,{size:sizeFor(),visibleKeys:visibleKeys(),
+    onHover:n=>{ if(n.type==='movement')movHoverSide(n.idx); else songHoverSide(n.key); },
+    onLeave:()=>{side.innerHTML=savedSide;},
+    onMovement:i=>renderMovement(i),
+    onSong:k=>T.openSong(k),
+    onHub:()=>{ fit(); universeSide(); }});
+  universeSide();
+  fit();
+}
+function renderMovement(i){
+  level='movement'; curMov=i; curGroup=null; backBtn.disabled=false;
+  const m=MOVES[i];
+  crumb.innerHTML=`<span style="cursor:pointer" onclick="MAP.home()">The Universe</span> › <b>${esc(m.name)}</b>`;
+  const vis=visibleKeys();
+  const songs=(m.songs||[]).map(x=>T.songByKey(x.key)).filter(s=>s&&(!vis||vis.has(s.song_key_norm)));
+  let groups=groupFor(songs);
+  const grouped=new Set(); groups.forEach(g=>g.songs.forEach(s=>grouped.add(s.song_key_norm)));
+  const leftover=songs.filter(s=>!grouped.has(s.song_key_norm));
+  if(leftover.length) groups=groups.concat([{label:'Other songs',songs:leftover}]);
+  const size=sizeFor(), cx=size/2, cy=size/2, rx=size*0.36, ry=size*0.36;
+  const wheel=document.createElement('div'); wheel.className='wheel'; wheel.style.width=size+'px'; wheel.style.height=size+'px';
+  let h='<div class="ring"></div>';
+  const hub=size*0.2;
+  groups.forEach((g,gi)=>{
+    const a=-Math.PI/2+2*Math.PI*gi/Math.max(groups.length,1);
+    const p=polar(cx,cy,rx,ry,a);
+    const c=T.MV_COLORS[(i*3+gi)%T.MV_COLORS.length];
+    const r=size*0.05+Math.min(g.songs.length,20)/20*size*0.04;
+    const dx=p.x-cx,dy=p.y-cy,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+    h+=`<div class="spoke" style="left:${cx}px;top:${cy}px;width:${len}px;transform:rotate(${ang}deg)"></div>`;
+    h+=`<div class="mv" data-g="${gi}" style="left:${p.x}px;top:${p.y}px;width:${r}px;height:${r}px;background:${c};font-size:${size*0.024}px"><span class="mvc">${g.songs.length}</span></div>`;
+    const lx=p.x+(r*0.6+size*0.055)*Math.cos(a), ly=p.y+(r*0.6+size*0.04)*Math.sin(a);
+    h+=`<div class="mvlbl" style="left:${lx}px;top:${ly}px;max-width:150px;white-space:normal;font-size:${Math.max(10,size*0.018)}px">${esc(T.short(g.label,34))}</div>`;
+  });
+  h+=`<div class="hub" data-hub="1" data-mv="${i}" style="width:${hub}px;height:${hub}px;font-size:${size*0.03}px;line-height:1.08;padding:8px;text-align:center;cursor:pointer">${esc(m.name)}</div>`;
+  wheel.innerHTML=h; canvas.innerHTML=''; canvas.appendChild(wheel);
+  const hubEl=wheel.querySelector('.hub[data-hub]');
+  if(hubEl) hubEl.addEventListener('click',()=>{
+    const suiteKey=T.SONGS.find(s=>s.display_title===m.name)?.song_key_norm;
+    if(suiteKey) T.openSong(suiteKey);
+  });
+  wheel.querySelectorAll('.mv').forEach(el=>{
+    const g=groups[+el.dataset.g];
+    wireHover(el,g.label,()=>groupHoverSide(g),()=>{side.innerHTML=savedSide;});
+    el.addEventListener('click',()=>renderGroup(i,g));
+  });
+  const def=T.movementDef(m.name);
+  setSide(`<div class="kicker" style="color:${T.mvColor(i)}">Movement ${m.roman}</div>
+    <h2 class="display">${esc(m.name)}</h2>
+    <p class="smv" style="color:${T.mvColor(i)}">${songs.length} songs · ${groups.length} clusters</p>
+    <p class="lead">${esc(def.body||'')}</p>
+    ${dirDistribution(songs)}
+    <p style="font-family:var(--ui);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin:16px 0 0">All songs</p>
+    ${songChips(songs)}
+    <div class="howto">Each node is a cluster of songs sharing a character archetype or folklore element. Click one to open it.</div>`);
+  fit();
+}
+function groupHoverSide(g){
+  setSide(`<div class="kicker">Cluster</div>
+    <h2 class="display">${esc(g.label)}</h2>
+    <p class="smv" style="color:var(--warm)">${g.songs.length} songs</p>
+    <p>Songs in this movement that share this element.</p>
+    ${songChips(g.songs)}`,false);
+}
+function renderGroup(i,g){
+  level='group'; curMov=i; curGroup=g; backBtn.disabled=false;
+  const m=MOVES[i];
+  crumb.innerHTML=`<span style="cursor:pointer" onclick="MAP.home()">The Universe</span> › <span style="cursor:pointer" onclick="MAP.up()">${esc(m.name)}</span> › <b>${esc(T.short(g.label,28))}</b>`;
+  const songs=g.songs;
+  const size=sizeFor(), cx=size/2, cy=size/2;
+  const wheel=document.createElement('div'); wheel.className='wheel'; wheel.style.width=size+'px'; wheel.style.height=size+'px';
+  let h='<div class="ring"></div><div class="corona" style="width:'+(size*0.3)+'px;height:'+(size*0.3)+'px"></div>';
+  const hub=size*0.2;
+  songs.forEach((s,j)=>{
+    const a=-Math.PI/2+2*Math.PI*j/Math.max(songs.length,1);
+    const r=size*0.28+ (j%2)*size*0.05;
+    const p={x:cx+r*Math.cos(a),y:cy+r*0.82*Math.sin(a)};
+    const dx=p.x-cx,dy=p.y-cy,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI;
+    h+=`<div class="spoke" style="left:${cx}px;top:${cy}px;width:${len}px;transform:rotate(${ang}deg)"></div>`;
+    h+=`<div class="dot" data-k="${esc(s.song_key_norm)}" data-t="${esc(s.display_title)}" style="left:${p.x}px;top:${p.y}px;width:${size*0.026}px;height:${size*0.026}px;background:${T.mvColorByName((s.primary_movements||[])[0])}"></div>`;
+    h+=`<div class="mvlbl" style="left:${cx+ (r+size*0.06)*Math.cos(a)}px;top:${cy+(r*0.82+size*0.04)*Math.sin(a)}px;max-width:130px;white-space:normal;font-size:${Math.max(9.5,size*0.016)}px">${esc(T.short(s.display_title,26))}</div>`;
+  });
+  h+=`<div class="hub" style="width:${hub}px;height:${hub}px;font-size:${size*0.03}px;line-height:1.1;padding:10px;text-align:center">${esc(T.short(g.label,26))}</div>`;
+  wheel.innerHTML=h; canvas.innerHTML=''; canvas.appendChild(wheel);
+  wheel.querySelectorAll('.dot').forEach(el=>{
+    wireHover(el,el.dataset.t,()=>songHoverSide(el.dataset.k),()=>{side.innerHTML=savedSide;});
+    el.addEventListener('click',()=>T.openSong(el.dataset.k));
+  });
+  setSide(`<div class="kicker">Cluster · ${esc(m.name)}</div>
+    <h2 class="display">${esc(g.label)}</h2>
+    <p class="smv" style="color:var(--warm)">${songs.length} songs</p>
+    <p>These songs share this element. Click any star — or a title below — to open its full record.</p>
+    ${songChips(songs)}`);
+  fit();
+}
+function home(){renderUniverse();}
+function up(){ if(level==='group')renderMovement(curMov); else home(); }
+backBtn.addEventListener('click',up);
+let qt;
+document.getElementById('q').addEventListener('input',e=>{filterText=e.target.value;clearTimeout(qt);qt=setTimeout(rerender,180);});
+const oriSel=document.getElementById('oriFilter');
+Object.keys(T.DIR_META).forEach(d=>{const op=document.createElement('option');op.value=d;op.textContent=T.dirLabel(d);oriSel.appendChild(op);});
+oriSel.addEventListener('change',e=>{filterDir=e.target.value;rerender();});
+function rerender(){ if(level==='universe')renderUniverse(); else if(level==='movement')renderMovement(curMov); else renderGroup(curMov,curGroup); }
+let rt; window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(rerender,200);});
+const mm=location.hash.match(/mv=(\d+)/);
+if(mm) renderMovement(+mm[1]); else renderUniverse();
+return {zoom,fit,home,up,renderMovement};
+})();
+</script>
+</body>
+</html>

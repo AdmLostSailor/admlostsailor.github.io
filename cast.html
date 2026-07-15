@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en" data-type="elegant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Cast · Terrapin Ouroboros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Space+Grotesk:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="assets/terrapin.css" rel="stylesheet">
+<style>
+  .cast-head{padding:38px 0 8px;text-align:center}
+  .cast-head h1{font-size:clamp(38px,6vw,68px);margin:8px 0 0}
+  .cast-head p{color:var(--muted);font-size:17px;max-width:640px;margin:12px auto 0}
+  .cast-nums{display:flex;justify-content:center;gap:26px;margin:22px 0 0;flex-wrap:wrap}
+  .cast-nums .cn b{font-family:var(--serif);font-size:30px;color:var(--gold);line-height:1;display:block}
+  .cast-nums .cn span{font-family:var(--ui);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+
+  .controls{position:sticky;top:63px;z-index:300;background:linear-gradient(180deg,rgba(10,6,22,.92),rgba(10,6,22,.78));
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:14px 0;margin-top:26px}
+  .controls .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .controls input,.controls select{font-family:var(--ui);font-size:14px;color:var(--text);
+    background:rgba(160,123,255,.08);border:1px solid var(--line);border-radius:10px;padding:11px 14px;outline:none}
+  .controls input{flex:1 1 220px;min-width:180px}
+  .controls input::placeholder{color:var(--faint)}
+  .controls input:focus,.controls select:focus{border-color:var(--violet)}
+  .controls .toggle{font-family:var(--ui);font-size:13px;color:var(--muted);border:1px solid var(--line);
+    border-radius:10px;padding:11px 14px;background:rgba(160,123,255,.06);transition:.14s;white-space:nowrap;cursor:pointer}
+  .controls .toggle.on{color:var(--gold);border-color:var(--line-warm);background:rgba(243,198,79,.12)}
+  .count{font-family:var(--ui);font-size:13px;color:var(--faint);margin-left:auto;white-space:nowrap}
+
+  .cast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;padding:26px 0 60px}
+  .pcard{border:1px solid var(--line);border-left-width:3px;border-radius:13px;background:rgba(20,12,38,.5);
+    padding:15px 16px;display:flex;flex-direction:column;gap:7px;cursor:pointer;transition:.14s}
+  .pcard:hover{border-color:var(--gold);background:rgba(243,198,79,.06);transform:translateY(-2px)}
+  .pcard .pc-name{font-family:var(--serif);font-weight:700;font-size:21px;line-height:1.08;color:var(--text)}
+  .pcard .pc-arch{font-family:var(--ui);font-size:11px;letter-spacing:.05em;color:var(--gold);text-transform:uppercase}
+  .pcard .pc-from{font-family:var(--ui);font-size:12px;color:var(--warm)}
+  .pcard .pc-traits{display:flex;flex-direction:column;gap:3px;margin-top:3px}
+  .pcard .pc-trait{font-size:12.5px;line-height:1.45;color:var(--muted)}
+  .pcard .pc-trait span{font-family:var(--ui);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--warm);margin-right:5px}
+  .pcard .pc-poles{display:flex;gap:5px;margin-top:5px}
+  .pcard .pc-pole{font-family:var(--ui);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
+  .pcard .pc-pole.f{color:var(--ember);border:1px solid rgba(255,122,61,.4)}
+  .pcard .pc-pole.t{color:var(--teal);border:1px solid rgba(78,224,198,.4)}
+  .empty{text-align:center;color:var(--faint);font-family:var(--ui);padding:60px 0}
+  .sentinel{height:1px}
+</style>
+</head>
+<body>
+<main>
+  <header class="cast-head wrap">
+    <div class="kicker gold">The Recurring Cast</div>
+    <h1 class="display">The Cast of the Songworld</h1>
+    <p>Seventeen hundred figures move through these songs — pilgrims, tricksters, beloveds, witnesses, outlaws. Each carries a wound, a lack, and something they seek. Search the whole company, or follow one back into its song.</p>
+    <div class="cast-nums" id="castNums"></div>
+  </header>
+
+  <div class="controls">
+    <div class="wrap">
+      <input id="q" type="search" placeholder="Search a name, archetype, or trait…" autocomplete="off">
+      <select id="cat"><option value="">All categories</option><option value="rotation">Regular Rotation</option><option value="gd">GD Originals</option><option value="cover">Covers</option><option value="studio">Discography Only</option></select>
+      <select id="sort">
+        <option value="az">Name A → Z</option>
+        <option value="plays">Most played song</option>
+      </select>
+      <button class="toggle" id="ftT">False Terrapin</button>
+      <button class="toggle" id="ttT">True Terrapin</button>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+
+  <div class="wrap"><div class="cast-grid" id="grid"></div><div class="empty" id="empty" style="display:none">No characters match those filters.</div></div>
+  <div class="sentinel" id="sentinel"></div>
+</main>
+
+<script src="data/terrapin_data.js"></script>
+<script src="data/terrapin_stats.js"></script>
+<script src="data/song_tiers.js"></script>
+<script src="assets/terrapin.js"></script>
+<script>
+(function(){
+const T=window.Terra, esc=T.esc, $=id=>document.getElementById(id);
+const TIERS=window.SONG_TIER||{};
+const CAT_LABEL={rotation:'Regular Rotation',gd:'GD Original',cover:'Cover',studio:'Discography Only'};
+const STATS_DATA=(window.TERRAPIN_STATS||{}).songStats||{};
+// flatten characters with their song
+const CHARS=[];
+T.SONGS.forEach(s=>(s.characters||[]).forEach(c=>{
+  CHARS.push({...c, songKey:s.song_key_norm, songTitle:s.display_title, mv:(s.primary_movements||[])[0]||'', tier:TIERS[s.song_key_norm]||''});
+}));
+const withFt=CHARS.filter(c=>c.ft&&c.ft.d).length, withTt=CHARS.filter(c=>c.tt&&c.tt.d).length;
+$('castNums').innerHTML=[
+  [CHARS.length.toLocaleString(),'characters'],
+  [T.SONGS.filter(s=>(s.characters||[]).length).length,'songs with a cast'],
+  [withFt.toLocaleString(),'false-Terrapin'],
+  [withTt.toLocaleString(),'true-Terrapin']
+].map(([n,l])=>`<div class="cn"><b>${n}</b><span>${l}</span></div>`).join('');
+
+let ftOnly=false, ttOnly=false, shown=0, curList=[];
+const PAGE=60;
+
+function filtered(){
+  const q=$('q').value.toLowerCase().trim(), cat=$('cat').value;
+  let arr=CHARS.filter(c=>{
+    if(cat && c.tier!==cat) return false;
+    if(ftOnly && !(c.ft&&c.ft.d)) return false;
+    if(ttOnly && !(c.tt&&c.tt.d)) return false;
+    if(q){
+      const hay=(c.name+' '+(c.archetype||'')+' '+(c.role||'')+' '+(c.wound||'')+' '+(c.seek||'')+' '+c.songTitle).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  const sort=$('sort').value;
+  const plays=k=>(STATS_DATA[k]&&STATS_DATA[k].plays)||0;
+  if(sort==='az') arr.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  else arr.sort((a,b)=>plays(b.songKey)-plays(a.songKey));
+  return arr;
+}
+function card(c){
+  const col=T.mvColorByName(c.mv);
+  const traits=[['Wound',c.wound],['Seeks',c.seek]].filter(t=>t[1]&&t[1].trim());
+  return `<div class="pcard" style="border-left-color:${col}" onclick="Terra.openSong('${esc(c.songKey)}')">
+    <div class="pc-name">${esc(c.name||'—')}</div>
+    ${c.archetype?`<div class="pc-arch">${esc(c.archetype)}</div>`:''}
+    <div class="pc-from">in ${esc(c.songTitle)}</div>
+    ${c.role?`<div class="pc-trait" style="color:#cdc2e6">${esc(T.short(c.role,120))}</div>`:''}
+    ${traits.length?`<div class="pc-traits">${traits.map(t=>`<div class="pc-trait"><span>${t[0]}</span>${esc(T.short(t[1],90))}</div>`).join('')}</div>`:''}
+    ${(c.ft&&c.ft.d)||(c.tt&&c.tt.d)?`<div class="pc-poles">${c.ft&&c.ft.d?'<span class="pc-pole f">False</span>':''}${c.tt&&c.tt.d?'<span class="pc-pole t">True</span>':''}</div>`:''}
+  </div>`;
+}
+function render(reset){
+  if(reset){curList=filtered();shown=0;$('grid').innerHTML='';}
+  const slice=curList.slice(shown,shown+PAGE);
+  $('grid').insertAdjacentHTML('beforeend',slice.map(card).join(''));
+  shown+=slice.length;
+  $('count').textContent=`${curList.length.toLocaleString()} character${curList.length===1?'':'s'}`;
+  $('empty').style.display=curList.length?'none':'block';
+}
+let qt;
+$('q').addEventListener('input',()=>{clearTimeout(qt);qt=setTimeout(()=>render(true),160);});
+['cat','sort'].forEach(id=>$(id).addEventListener('change',()=>render(true)));
+$('ftT').addEventListener('click',()=>{ftOnly=!ftOnly;$('ftT').classList.toggle('on',ftOnly);render(true);});
+$('ttT').addEventListener('click',()=>{ttOnly=!ttOnly;$('ttT').classList.toggle('on',ttOnly);render(true);});
+// infinite scroll
+if('IntersectionObserver' in window){
+  new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting&&shown<curList.length)render(false);});},{rootMargin:'400px'}).observe($('sentinel'));
+}
+render(true);
+})();
+</script>
+</body>
+</html>

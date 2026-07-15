@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="en" data-type="elegant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Segues · Terrapin Ouroboros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Space+Grotesk:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="assets/terrapin.css" rel="stylesheet">
+<style>
+  .seg-head{padding:38px 0 6px;text-align:center;max-width:760px;margin:0 auto}
+  .seg-head h1{font-size:clamp(38px,6vw,70px);margin:8px 0 0}
+  .seg-head p{color:var(--muted);font-size:17px;margin:12px 0 0}
+
+  .seg-toggle{display:flex;justify-content:center;margin:22px 0 6px}
+  .seg-toggle .seg{display:inline-flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:rgba(8,5,18,.4)}
+  .seg-toggle button{font-family:var(--ui);font-size:13.5px;background:transparent;border:none;color:var(--muted);padding:11px 22px;cursor:pointer;transition:.14s}
+  .seg-toggle button.on{background:linear-gradient(95deg,var(--gold),var(--amber));color:#2a1606;font-weight:600}
+  .seg-view{display:none}.seg-view.on{display:block}
+
+  /* graph */
+  .graphwrap{position:relative;width:100%;height:72vh;min-height:520px;margin:10px 0 8px;
+    border:1px solid var(--line-warm);border-radius:18px;overflow:hidden;
+    background:radial-gradient(120% 100% at 50% 45%,rgba(20,11,38,.45),#08040e 80%);cursor:grab}
+  .graphwrap.drag{cursor:grabbing}
+  .gcanvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+  svg.gedges{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+  .gnode{position:absolute;transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:filter .15s,box-shadow .15s}
+  .gnode:hover{z-index:10}
+  .gnode.faded{opacity:.1;transition:opacity .2s}
+  .gnode.hot{filter:brightness(1.4) saturate(1.3)}
+  .gnode-lbl{position:absolute;left:50%;top:100%;transform:translate(-50%,5px);white-space:nowrap;
+    font-family:var(--ui);font-size:10.5px;color:#fff;text-shadow:0 1px 5px #000,0 0 10px #000;
+    pointer-events:none;letter-spacing:.02em}
+  .gnode.always-lbl .gnode-lbl,.gnode:hover .gnode-lbl{opacity:1}
+  .gnode .gnode-lbl{opacity:0;transition:opacity .12s}
+  .zoom-ctl{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;gap:6px;z-index:6}
+  .zoom-ctl button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:rgba(20,12,38,.9);color:var(--text);font-size:18px;cursor:pointer;transition:.12s}
+  .zoom-ctl button:hover{background:rgba(40,26,64,.95);border-color:var(--violet)}
+  .g-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0 14px;
+    font-family:var(--ui);font-size:13px;color:var(--faint);justify-content:center}
+  .g-controls label{display:flex;align-items:center;gap:8px}
+  .g-controls input[type=range]{accent-color:var(--gold);width:100px}
+  .g-stat{background:rgba(160,123,255,.08);border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--warm)}
+  .tier-legend{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin:6px 0 36px;font-family:var(--ui);font-size:12.5px;color:var(--faint)}
+  .tier-legend span{display:inline-flex;align-items:center;gap:7px}
+  .tier-legend i{display:inline-block;border-radius:2px}
+  .g-hint{text-align:center;font-family:var(--ui);font-size:12.5px;color:var(--faint);margin:0 0 6px}
+
+  /* node tooltip */
+  #nodeTip{position:fixed;z-index:1200;pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .14s,transform .14s;
+    background:linear-gradient(180deg,#1d1236,#140b27);border:1px solid var(--gold);
+    border-radius:12px;box-shadow:0 12px 36px rgba(0,0,0,.6);padding:12px 15px;min-width:180px}
+  #nodeTip.show{opacity:1;transform:translateY(0)}
+  #nodeTip .nt-title{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--text);line-height:1.1;margin-bottom:8px}
+  #nodeTip .nt-row{font-family:var(--ui);font-size:12px;color:var(--faint);display:flex;justify-content:space-between;gap:16px;padding:3px 0;border-bottom:1px solid var(--line)}
+  #nodeTip .nt-row:last-child{border:none}
+  #nodeTip .nt-val{color:var(--gold);font-weight:600}
+  #nodeTip .nt-open{font-family:var(--ui);font-size:11.5px;color:var(--teal);margin-top:8px;display:block;text-align:center;letter-spacing:.04em}
+
+  /* top-25 combos view */
+  .combo-tabs{display:flex;justify-content:center;gap:0;margin:14px 0 22px}
+  .combo-tabs .ctab{font-family:var(--ui);font-size:13px;background:rgba(160,123,255,.06);border:1px solid var(--line);color:var(--muted);padding:9px 20px;cursor:pointer;transition:.13s}
+  .combo-tabs .ctab:first-child{border-radius:10px 0 0 10px}
+  .combo-tabs .ctab:last-child{border-radius:0 10px 10px 0}
+  .combo-tabs .ctab.on{background:linear-gradient(90deg,rgba(243,198,79,.18),rgba(160,123,255,.18));color:var(--text);border-color:var(--line-warm)}
+  .combos{display:flex;flex-direction:column;gap:10px;padding:0 0 60px}
+  .combo{border:1px solid var(--line);border-left-width:3px;border-radius:13px;background:rgba(20,12,38,.5);padding:14px 16px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:12px}
+  .combo .co-rank{font-family:var(--serif);font-size:22px;color:var(--faint);font-weight:700;line-height:1}
+  .combo .co-chain{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  .combo .co-song{font-family:var(--serif);font-weight:600;font-size:15px;color:var(--text);cursor:pointer;transition:.12s}
+  .combo .co-song:hover{color:var(--gold)}
+  .combo .co-arrow{color:var(--violet);font-size:14px}
+  .combo .co-count{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--gold);line-height:1;text-align:right;white-space:nowrap}
+  .combo .co-times{font-family:var(--ui);font-size:10px;color:var(--faint);text-align:right}
+  .combo .co-tier{font-family:var(--ui);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:2px 8px;margin-top:4px;display:inline-block}
+  .combo-note{text-align:center;color:var(--muted);font-size:14px;font-family:var(--ui);margin:-10px 0 18px}
+  .pairs{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px;padding:18px 0 60px}
+  .pair{border:1px solid var(--line);border-left-width:3px;border-radius:13px;background:rgba(20,12,38,.5);padding:14px 16px}
+  .pair .pr-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .pair .pr-a,.pair .pr-b{font-family:var(--serif);font-weight:600;font-size:15.5px;cursor:pointer}
+  .pair .pr-a:hover,.pair .pr-b:hover{color:var(--gold)}
+  .pair .pr-arrow{color:var(--teal);font-size:14px}
+  .pair .pr-meta{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--ui);font-size:12px;color:var(--faint)}
+  .pair .pr-n{color:var(--gold);font-weight:600}
+  .pair .pr-tier{font-family:var(--ui);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:2px 9px}
+  .seg-intro2{text-align:center;color:var(--muted);font-size:15px;max-width:680px;margin:0 auto 8px}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="seg-head">
+    <div class="kicker gold">How the Songs Connect</div>
+    <h1 class="display">The Segue Network</h1>
+    <p>Live, the Dead rarely stopped — they flowed. Some pairings became ritual: China Cat almost always melting into I Know You Rider; Lost Sailor always arriving at Saint of Circumstance. This is the web of those bonds, drawn from thousands of setlists.</p>
+  </header>
+
+  <div class="seg-toggle">
+    <div class="seg">
+      <button data-view="graph" class="on">Constellation</button>
+      <button data-view="combos">Top 25 Combos</button>
+      <button data-view="list">All Pairs</button>
+    </div>
+  </div>
+
+  <section class="seg-view on" id="view-graph">
+    <p class="g-hint">Nodes are songs · thickness = bond strength · hover a node to isolate its connections · click to open the song · drag to pan · scroll to zoom</p>
+    <div class="graphwrap" id="graphwrap">
+      <canvas id="glcanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.35"></canvas>
+      <div class="gcanvas" id="gcanvas"></div>
+      <div class="zoom-ctl"><button id="zIn">+</button><button id="zOut">−</button><button id="zReset" title="Reset view" style="font-size:13px">⟲</button></div>
+    </div>
+    <div class="g-controls">
+      <label>Min plays <input type="range" id="minN" min="15" max="120" value="30" step="5"> <span id="minNVal">30</span></label>
+      <div class="g-stat" id="gstat">— nodes · — edges</div>
+    </div>
+    <div class="tier-legend">
+      <span><i style="width:26px;height:5px;background:#4ee0c6;box-shadow:0 0 8px #4ee0c6"></i>Fused — inseparable pairs</span>
+      <span><i style="width:18px;height:3.5px;background:#f3c64f;box-shadow:0 0 6px #f3c64f99"></i>Strong directional</span>
+      <span><i style="width:14px;height:2px;background:#a07bff88"></i>Recurring</span>
+    </div>
+  </section>
+
+  <section class="seg-view" id="view-combos">
+    <div class="combo-tabs">
+      <button class="ctab on" data-len="2">Pairs</button>
+      <button class="ctab" data-len="3">Triples</button>
+      <button class="ctab" data-len="4">Quads</button>
+    </div>
+    <p class="combo-note" id="comboNote"></p>
+    <div class="combos" id="combos"></div>
+  </section>
+    <p class="seg-intro2">The tightest bonds in the songworld, ranked by times performed. Click either title to open it.</p>
+    <div class="pairs" id="pairs"></div>
+  </section>
+</main>
+
+<div id="nodeTip"></div>
+
+<script src="data/terrapin_data.js"></script>
+<script src="data/terrapin_segues.js"></script>
+<script src="data/terrapin_stats.js"></script>
+<script src="assets/terrapin.js"></script>
+<script>
+(function(){
+const T=window.Terra, esc=T.esc, $=id=>document.getElementById(id);
+const ALL=(window.TERRAPIN_SEGUES||{pairs:[]}).pairs;
+const STATS_DATA=(window.TERRAPIN_STATS||{}).songStats||{};
+const fmt=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+const titleOf=k=>{const s=T.songByKey(k);return s?s.display_title:k;};
+const nrm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+const titleToKey={}; T.SONGS.forEach(s=>titleToKey[nrm(s.display_title)]=s.song_key_norm);
+function resolveTitle(t){return titleToKey[nrm(t)]||null;}
+
+/* ---- combo data (from segue_top25_pairs_triples_quads.csv) ---- */
+const COMBOS=[
+  // PAIRS
+  {len:2,rank:1,songs:['China Cat Sunflower','I Know You Rider'],count:531,tier:'fused'},
+  {len:2,rank:2,songs:['Scarlet Begonias','Fire On The Mountain'],count:239,tier:'strong_dir'},
+  {len:2,rank:3,songs:['Estimated Prophet','Eyes Of The World'],count:178,tier:'recurring'},
+  {len:2,rank:4,songs:['Me and My Uncle','Big River'],count:176,tier:'recurring'},
+  {len:2,rank:5,songs:['The Other One','Wharf Rat'],count:163,tier:'recurring'},
+  {len:2,rank:6,songs:['Throwing Stones','Not Fade Away'],count:162,tier:'recurring'},
+  {len:2,rank:7,songs:['Lost Sailor','Saint of Circumstance'],count:142,tier:'strong_dir'},
+  {len:2,rank:8,songs:['Mama Tried','Mexicali Blues'],count:134,tier:'recurring'},
+  {len:2,rank:9,songs:['Not Fade Away',"Going Down the Road Feelin' Bad"],count:122,tier:'recurring'},
+  {len:2,rank:10,songs:['Help On The Way','Slipknot'],count:111,tier:'fused'},
+  {len:2,rank:11,songs:['Lazy Lightning','Supplication'],count:111,tier:'fused'},
+  {len:2,rank:12,songs:['Slipknot',"Franklin's Tower"],count:108,tier:'strong_dir'},
+  {len:2,rank:13,songs:['Black Peter','Around and Around'],count:93,tier:'recurring'},
+  {len:2,rank:14,songs:["Going Down the Road Feelin' Bad",'Not Fade Away'],count:93,tier:'recurring'},
+  {len:2,rank:15,songs:['Wharf Rat','Sugar Magnolia'],count:89,tier:'recurring'},
+  {len:2,rank:16,songs:['Me and My Uncle','Mexicali Blues'],count:86,tier:'recurring'},
+  {len:2,rank:17,songs:['The Other One','Stella Blue'],count:85,tier:'recurring'},
+  {len:2,rank:18,songs:['Dark Star','Saint Stephen'],count:84,tier:'recurring'},
+  {len:2,rank:19,songs:['Playing in the Band',"Uncle John's Band"],count:84,tier:'recurring'},
+  {len:2,rank:20,songs:['Stella Blue','Sugar Magnolia'],count:81,tier:'recurring'},
+  {len:2,rank:21,songs:['Wharf Rat','Around and Around'],count:79,tier:'recurring'},
+  {len:2,rank:22,songs:['Bertha',"Good Lovin'"],count:77,tier:'recurring'},
+  {len:2,rank:23,songs:["Truckin'","The Other One"],count:75,tier:'recurring'},
+  {len:2,rank:24,songs:['Saint Stephen','The Eleven'],count:73,tier:'directional'},
+  {len:2,rank:25,songs:['Black Peter','Sugar Magnolia'],count:71,tier:'recurring'},
+  // TRIPLES
+  {len:3,rank:1,songs:['Help On The Way','Slipknot',"Franklin's Tower"],count:105},
+  {len:3,rank:2,songs:['Not Fade Away',"Going Down the Road Feelin' Bad",'Not Fade Away'],count:81},
+  {len:3,rank:3,songs:['Dark Star','Saint Stephen','The Eleven'],count:65},
+  {len:3,rank:4,songs:['Scarlet Begonias','Fire On The Mountain','Estimated Prophet'],count:65},
+  {len:3,rank:5,songs:['China Cat Sunflower','I Know You Rider','Playing in the Band'],count:45},
+  {len:3,rank:6,songs:['The Other One','Wharf Rat','Sugar Magnolia'],count:41},
+  {len:3,rank:7,songs:['China Cat Sunflower','I Know You Rider','Estimated Prophet'],count:35},
+  {len:3,rank:8,songs:['Wharf Rat','Throwing Stones','Not Fade Away'],count:35},
+  {len:3,rank:9,songs:['Ship Of Fools','Estimated Prophet','Eyes Of The World'],count:34},
+  {len:3,rank:10,songs:['Saint Stephen','The Eleven','Turn On Your Love Light'],count:33},
+  {len:3,rank:11,songs:['China Cat Sunflower','I Know You Rider','Man Smart (Woman Smarter)'],count:33},
+  {len:3,rank:12,songs:['Scarlet Begonias','Fire On The Mountain','Samson and Delilah'],count:32},
+  {len:3,rank:13,songs:['The Other One','Wharf Rat','Around and Around'],count:31},
+  {len:3,rank:14,songs:['Fire On The Mountain','Estimated Prophet','Eyes Of The World'],count:29},
+  {len:3,rank:15,songs:['China Cat Sunflower','I Know You Rider','Samson and Delilah'],count:28},
+  {len:3,rank:16,songs:['I Need A Miracle','Bertha',"Good Lovin'"],count:28},
+  {len:3,rank:17,songs:['Stella Blue','Throwing Stones','Not Fade Away'],count:27},
+  {len:3,rank:18,songs:['The Other One','Wharf Rat','Throwing Stones'],count:27},
+  {len:3,rank:19,songs:['China Cat Sunflower','I Know You Rider','Looks Like Rain'],count:26},
+  {len:3,rank:20,songs:['Not Fade Away','Black Peter','Around and Around'],count:26},
+  {len:3,rank:21,songs:['Lost Sailor','Saint of Circumstance','Deal'],count:25},
+  {len:3,rank:22,songs:['Scarlet Begonias','Fire On The Mountain','Playing in the Band'],count:24},
+  {len:3,rank:23,songs:['They Love Each Other','Mama Tried','Mexicali Blues'],count:24},
+  {len:3,rank:24,songs:['Althea','Lost Sailor','Saint of Circumstance'],count:24},
+  {len:3,rank:25,songs:['The Other One','Stella Blue','Sugar Magnolia'],count:23},
+  // QUADS
+  {len:4,rank:1,songs:['Scarlet Begonias','Fire On The Mountain','Estimated Prophet','Eyes Of The World'],count:29},
+  {len:4,rank:2,songs:['Dark Star','Saint Stephen','The Eleven','Turn On Your Love Light'],count:28},
+  {len:4,rank:3,songs:['The Other One','Wharf Rat','Throwing Stones','Not Fade Away'],count:19},
+  {len:4,rank:4,songs:['Sugar Magnolia','Not Fade Away',"Going Down the Road Feelin' Bad",'Not Fade Away'],count:19},
+  {len:4,rank:5,songs:['Dark Star','Saint Stephen','The Eleven',"Death Don't Have No Mercy"],count:19},
+  {len:4,rank:6,songs:['China Cat Sunflower','I Know You Rider','Estimated Prophet','Eyes Of The World'],count:17},
+  {len:4,rank:7,songs:['Scarlet Begonias','Fire On The Mountain','Estimated Prophet',"He's Gone"],count:14},
+  {len:4,rank:8,songs:['Saint Stephen','Not Fade Away',"Going Down the Road Feelin' Bad",'Not Fade Away'],count:13},
+  {len:4,rank:9,songs:['Help On The Way','Slipknot',"Franklin's Tower",'Estimated Prophet'],count:12},
+  {len:4,rank:10,songs:['Help On The Way','Slipknot',"Franklin's Tower",'Little Red Rooster'],count:11},
+  {len:4,rank:11,songs:['Samson and Delilah','Ship Of Fools','Estimated Prophet','Eyes Of The World'],count:10},
+  {len:4,rank:12,songs:['China Cat Sunflower','I Know You Rider','Man Smart (Woman Smarter)','Ship Of Fools'],count:10},
+  {len:4,rank:13,songs:['Scarlet Begonias','Fire On The Mountain','Lost Sailor','Saint of Circumstance'],count:10},
+  {len:4,rank:14,songs:['Scarlet Begonias','Fire On The Mountain','Samson and Delilah','Ship Of Fools'],count:9},
+  {len:4,rank:15,songs:['China Cat Sunflower','I Know You Rider','Playing in the Band','Terrapin Station'],count:9},
+  {len:4,rank:16,songs:['Scarlet Begonias','Fire On The Mountain','Samson and Delilah','Terrapin Station'],count:9},
+  {len:4,rank:17,songs:['The Promised Land','They Love Each Other','Mama Tried','Mexicali Blues'],count:9},
+  {len:4,rank:18,songs:['Good Morning, School Girl','Dark Star','Saint Stephen','The Eleven'],count:9},
+  {len:4,rank:19,songs:['China Cat Sunflower','I Know You Rider','Playing in the Band',"Uncle John's Band"],count:8},
+  {len:4,rank:20,songs:['China Cat Sunflower','I Know You Rider','Looks Like Rain',"He's Gone"],count:8},
+  {len:4,rank:21,songs:['China Cat Sunflower','I Know You Rider','Samson and Delilah',"He's Gone"],count:8},
+  {len:4,rank:22,songs:['Althea','Lost Sailor','Saint of Circumstance','Deal'],count:8},
+  {len:4,rank:23,songs:['Jack Straw','They Love Each Other','Mama Tried','Mexicali Blues'],count:8},
+  {len:4,rank:24,songs:['Mississippi Half-Step Uptown Toodeloo',"Franklin's Tower",'Mama Tried','Mexicali Blues'],count:8},
+  {len:4,rank:25,songs:['Help On The Way','Slipknot',"Franklin's Tower",'Minglewood Blues'],count:7}
+];
+
+/* tier style */
+const TIER={
+  fused:    {color:'#4ee0c6',width:5,  opacity:0.92,glow:12,label:'fused'},
+  strong_dir:{color:'#f3c64f',width:3,  opacity:0.78,glow:8,label:'strong'},
+  directional:{color:'#f3c64f',width:2.5,opacity:0.55,glow:0,label:'directional'},
+  recurring: {color:'#a07bff',width:1.5,opacity:0.32,glow:0,label:'recurring'}
+};
+
+/* ---- view toggle ---- */
+const views={graph:$('view-graph'),list:$('view-list'),combos:$('view-combos')};
+let graphBuilt=false;
+document.querySelector('.seg-toggle').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-view]'); if(!b)return;
+  document.querySelectorAll('.seg-toggle button').forEach(x=>x.classList.toggle('on',x===b));
+  Object.entries(views).forEach(([k,el])=>{if(el)el.classList.toggle('on',k===b.dataset.view);});
+  if(b.dataset.view==='graph'&&!graphBuilt){buildGraphUI();graphBuilt=true;}
+});
+
+/* ---- combos view ---- */
+function renderCombos(len){
+  const data=COMBOS.filter(c=>c.len===len);
+  const lenLabel={2:'pair',3:'triple',4:'four-song run'};
+  $('comboNote').textContent=`The top 25 ${lenLabel[len]}s — songs that appeared together in this sequence, in this order, live.`;
+  $('combos').innerHTML=data.map(c=>{
+    const tier=c.tier?TIER[c.tier]:null; const col=tier?tier.color:'#a07bff';
+    const chain=c.songs.map(t=>{
+      const key=resolveTitle(t);
+      return `<span class="co-song" ${key?`onclick="Terra.openSong('${esc(key)}')"`:''}>${esc(t)}</span>`;
+    }).join('<span class="co-arrow">›</span>');
+    const tierBadge=tier?`<div class="co-tier" style="color:${col};border:1px solid ${col}55">${tier.label}</div>`:'';
+    return `<div class="combo" style="border-left-color:${col}">
+      <div class="co-rank">${c.rank}</div>
+      <div><div class="co-chain">${chain}</div>${tierBadge}</div>
+      <div><div class="co-count">${c.count}</div><div class="co-times">times</div></div>
+    </div>`;
+  }).join('');
+}
+renderCombos(2);
+document.querySelector('.combo-tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.ctab'); if(!b)return;
+  document.querySelectorAll('.ctab').forEach(x=>x.classList.toggle('on',x===b));
+  renderCombos(+b.dataset.len);
+});
+
+/* ---- node tooltip ---- */
+const tip=$('nodeTip');
+let tipHide;
+function showTip(el,key){
+  clearTimeout(tipHide);
+  const s=T.songByKey(key);
+  const ss=STATS_DATA[key];
+  const title=s?s.display_title:key;
+  const plays=ss?fmt(ss.plays):null;
+  // find all pairs involving this node in current graph, sorted by count desc
+  const connections=curPairs
+    .filter(p=>p.a===key||p.b===key)
+    .sort((a,b)=>b.n-a.n)
+    .map(p=>({other:p.a===key?p.b:p.a, n:p.n, tier:p.tier}));
+  const pairRows=connections.slice(0,8).map(c=>{
+    const t=TIER[c.tier]||TIER.recurring;
+    return `<div class="nt-row"><span style="color:${t.color}">${esc(titleOf(c.other))}</span><span class="nt-val">${fmt(c.n)}×</span></div>`;
+  }).join('');
+  const more=connections.length>8?`<div style="font-size:11px;color:var(--faint);margin-top:4px">+${connections.length-8} more</div>`:'';
+  tip.innerHTML=`<div class="nt-title">${esc(title)}</div>`+
+    (plays?`<div class="nt-row" style="margin-bottom:6px;padding-bottom:8px;border-bottom:1px solid var(--line)"><span>Live plays</span><span class="nt-val">${plays}</span></div>`:'') +
+    (connections.length?`<div style="font-family:var(--ui);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:5px">Segue pairings</div>${pairRows}${more}`:'')+
+    (s?`<span class="nt-open">click to open →</span>`:'');
+  const tw=240, th=tip.offsetHeight||130;
+  let left=el.getBoundingClientRect().left+el.offsetWidth/2-tw/2;
+  let top=el.getBoundingClientRect().top-th-14;
+  if(top<10) top=el.getBoundingClientRect().bottom+10;
+  left=Math.max(12,Math.min(left,window.innerWidth-tw-12));
+  tip.style.left=left+'px'; tip.style.top=top+'px';
+  tip.style.width=tw+'px';
+  tip.classList.add('show');
+}
+function hideTip(){tipHide=setTimeout(()=>tip.classList.remove('show'),180);}
+
+/* ---- list view ---- */
+$('pairs').innerHTML=ALL.slice(0,120).map(p=>{
+  const tier=TIER[p.tier]||TIER.recurring; const col=tier.color;
+  return `<div class="pair" style="border-left-color:${col}">
+    <div class="pr-top"><span class="pr-a" onclick="Terra.openSong('${esc(p.a)}')">${esc(titleOf(p.a))}</span>
+      <span class="pr-arrow">→</span><span class="pr-b" onclick="Terra.openSong('${esc(p.b)}')">${esc(titleOf(p.b))}</span></div>
+    <div class="pr-meta"><span class="pr-tier" style="color:${col};border:1px solid ${col}55">${p.tier.replace('_',' ')}</span>
+      <span><b class="pr-n">${p.n}</b> times</span><span>${Math.round(p.pab*100)}% → after</span></div>
+  </div>`;
+}).join('');
+
+/* ============================================================
+   GRAPH
+   ============================================================ */
+const W=1800,H=1200;
+let zoom=1,panX=0,panY=0;
+let activeKey=null;
+let curPairs=[],nodes={},nodeEls={};
+
+/* --- degree for node sizing --- */
+function computeDeg(pairs){
+  const d={};
+  pairs.forEach(p=>{d[p.a]=(d[p.a]||0)+p.n;d[p.b]=(d[p.b]||0)+p.n;});
+  return d;
+}
+
+/* --- FORCE SIMULATION --- */
+function simulate(keys,pairs,pos,iters=280){
+  // init velocities
+  const vx={},vy={};
+  keys.forEach(k=>{vx[k]=0;vy[k]=0;});
+  const amap={};
+  pairs.forEach(p=>{
+    (amap[p.a]=amap[p.a]||[]).push(p);
+    (amap[p.b]=amap[p.b]||[]).push({...p,a:p.b,b:p.a});
+  });
+  const maxN=Math.max(...pairs.map(p=>p.n),1);
+  for(let it=0;it<iters;it++){
+    const cool=1-it/iters;
+    // repulsion between all pairs
+    for(let i=0;i<keys.length;i++){
+      for(let j=i+1;j<keys.length;j++){
+        const a=keys[i],b=keys[j];
+        let dx=pos[a].x-pos[b].x, dy=pos[a].y-pos[b].y;
+        const d2=dx*dx+dy*dy||1, d=Math.sqrt(d2);
+        const f=4200/d2;
+        dx/=d; dy/=d;
+        vx[a]+=dx*f*cool; vy[a]+=dy*f*cool;
+        vx[b]-=dx*f*cool; vy[b]-=dy*f*cool;
+      }
+    }
+    // spring attraction along edges
+    pairs.forEach(p=>{
+      const a=pos[p.a],b=pos[p.b];
+      let dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1;
+      // target distance: fused=100, strong=150, recurring=240-300
+      const target=p.tier==='fused'?90:p.tier==='strong_dir'?140:220+60*(1-p.n/maxN);
+      const f=(d-target)*0.022*(p.n/maxN+0.25);
+      dx/=d; dy/=d;
+      vx[p.a]+=dx*f*cool; vy[p.a]+=dy*f*cool;
+      vx[p.b]-=dx*f*cool; vy[p.b]-=dy*f*cool;
+    });
+    // gravity toward center
+    keys.forEach(k=>{
+      const dx=W/2-pos[k].x, dy=H/2-pos[k].y;
+      vx[k]+=dx*0.004*cool; vy[k]+=dy*0.004*cool;
+    });
+    // apply + damp + clamp
+    keys.forEach(k=>{
+      vx[k]*=.86; vy[k]*=.86;
+      pos[k].x=Math.max(60,Math.min(W-60,pos[k].x+Math.max(-18,Math.min(18,vx[k]))));
+      pos[k].y=Math.max(60,Math.min(H-60,pos[k].y+Math.max(-18,Math.min(18,vy[k]))));
+    });
+  }
+  return pos;
+}
+
+/* --- seed positions deterministically --- */
+function seed(keys,pairs,deg){
+  const maxDeg=Math.max(...Object.values(deg),1);
+  const pos={};
+  // place fused pairs first as tight anchors
+  const fusedPairs=pairs.filter(p=>p.tier==='fused');
+  let placed=new Set();
+  const cx=W/2, cy=H/2;
+  fusedPairs.forEach((p,fi)=>{
+    const ang=-Math.PI/2+fi*(2*Math.PI/Math.max(fusedPairs.length,1));
+    const r=160;
+    if(!placed.has(p.a)){pos[p.a]={x:cx+r*Math.cos(ang)-50,y:cy+r*Math.sin(ang)};placed.add(p.a);}
+    if(!placed.has(p.b)){pos[p.b]={x:cx+r*Math.cos(ang)+50,y:cy+r*Math.sin(ang)};placed.add(p.b);}
+  });
+  // place strong_dir near their fused neighbors
+  pairs.filter(p=>p.tier==='strong_dir'||p.tier==='directional').forEach(p=>{
+    [p.a,p.b].forEach(k=>{ if(!placed.has(k)){
+      const neighbor=pairs.find(q=>(q.a===k||q.b===k)&&placed.has(q.a===k?q.b:q.a));
+      if(neighbor){const ref=pos[neighbor.a===k?neighbor.b:neighbor.a];
+        const ang=Math.random()*2*Math.PI; const r=160+Math.random()*80;
+        pos[k]={x:Math.max(80,Math.min(W-80,ref.x+r*Math.cos(ang))),y:Math.max(80,Math.min(H-80,ref.y+r*Math.sin(ang)))};
+      } else {const ang=2*Math.PI*placed.size/keys.length;const r=280+Math.random()*100;
+        pos[k]={x:cx+r*Math.cos(ang),y:cy+r*Math.sin(ang)};}
+      placed.add(k);}});
+  });
+  // remaining on outer ring by degree
+  const rem=keys.filter(k=>!placed.has(k)).sort((a,b)=>deg[b]-deg[a]);
+  rem.forEach((k,i)=>{
+    const a=-Math.PI/2+2*Math.PI*i/Math.max(rem.length,1);
+    const r=360+100*(1-deg[k]/maxDeg);
+    pos[k]={x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)};
+  });
+  return pos;
+}
+
+/* --- build/rebuild graph --- */
+function buildGraphUI(){
+  // run sim only once; slider just filters display
+  const minN=+$('minN').value;
+  buildGraph(minN);
+}
+
+function buildGraph(minN){
+  const pairs=ALL.filter(p=>p.n>=minN);
+  if(!pairs.length){$('gcanvas').innerHTML='';$('gstat').textContent='No pairs at this threshold';return;}
+  const deg=computeDeg(pairs);
+  const keys=Object.keys(deg);
+  const maxDeg=Math.max(...Object.values(deg),1);
+  // seed + simulate
+  const pos=simulate(keys,pairs,seed(keys,pairs,deg));
+  // now build DOM
+  const canvas=$('gcanvas'); canvas.innerHTML='';
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  // draw edges as SVG (much crisper than divs)
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('width',W); svg.setAttribute('height',H);
+  svg.style.cssText=`position:absolute;left:0;top:0;overflow:visible;pointer-events:none`;
+  // defs for glow filters
+  const defs=document.createElementNS(svgNS,'defs');
+  ['fused','strong_dir'].forEach(tier=>{
+    const t=TIER[tier]; const f=document.createElementNS(svgNS,'filter');
+    f.setAttribute('id','glow-'+tier); f.setAttribute('x','-50%'); f.setAttribute('y','-50%');
+    f.setAttribute('width','200%'); f.setAttribute('height','200%');
+    const blur=document.createElementNS(svgNS,'feGaussianBlur');
+    blur.setAttribute('stdDeviation',t.glow/2); blur.setAttribute('result','blur');
+    const merge=document.createElementNS(svgNS,'feMerge');
+    ['blur','SourceGraphic'].forEach(ref=>{const mn=document.createElementNS(svgNS,'feMergeNode');mn.setAttribute('in',ref);merge.appendChild(mn);});
+    f.appendChild(blur); f.appendChild(merge); defs.appendChild(f);
+  });
+  svg.appendChild(defs);
+  // sort edges: draw recurring first, then strong, then fused on top
+  const orderMap={recurring:0,directional:1,strong_dir:2,fused:3};
+  const sortedPairs=[...pairs].sort((a,b)=>(orderMap[a.tier]||0)-(orderMap[b.tier]||0));
+  sortedPairs.forEach(p=>{
+    const a=pos[p.a],b=pos[p.b]; if(!a||!b)return;
+    const t=TIER[p.tier]||TIER.recurring;
+    const line=document.createElementNS(svgNS,'line');
+    line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
+    line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+    line.setAttribute('stroke',t.color);
+    line.setAttribute('stroke-width',t.width);
+    line.setAttribute('stroke-opacity',t.opacity);
+    line.setAttribute('stroke-linecap','round');
+    if(t.glow) line.setAttribute('filter',`url(#glow-${p.tier})`);
+    line.dataset.a=p.a; line.dataset.b=p.b;
+    svg.appendChild(line);
+  });
+  canvas.appendChild(svg);
+  // nodes
+  const topKeys=new Set(keys); // all nodes get always-visible labels
+  const newEls={};
+  keys.forEach(k=>{
+    const pp=pos[k]; const sz=11+Math.sqrt(deg[k]/maxDeg)*28;
+    const col=T.mvColorByName((T.songByKey(k)||{}).primary_movements?.[0]||'') || '#a07bff';
+    const el=document.createElement('div');
+    el.className='gnode'+(topKeys.has(k)?' always-lbl':'');
+    el.dataset.k=k;
+    el.style.cssText=`left:${pp.x}px;top:${pp.y}px;width:${sz}px;height:${sz}px;`+
+      `background:radial-gradient(circle at 35% 35%,color-mix(in oklab,${col} 60%,#fff),${col} 55%,${col}99);`+
+      `box-shadow:0 0 ${sz*0.55}px ${col}99,0 0 ${sz*0.2}px ${col}`;
+    el.innerHTML=`<span class="gnode-lbl">${esc(titleOf(k))}</span>`;
+    el.addEventListener('mouseenter',()=>{highlight(k,svg);showTip(el,k);});
+    el.addEventListener('mouseleave',()=>{highlight(null,svg);hideTip();});
+    el.addEventListener('click',()=>T.openSong(k));
+    canvas.appendChild(el);
+    newEls[k]=el;
+  });
+  nodeEls=newEls; curPairs=pairs; nodes=pos;
+  $('gstat').textContent=`${keys.length} songs · ${pairs.length} segues`;
+  fit();
+}
+
+function highlight(k,svg){
+  if(!k){
+    Object.values(nodeEls).forEach(el=>{el.classList.remove('faded','hot');});
+    svg.querySelectorAll('line').forEach(l=>{l.style.strokeOpacity='';l.style.strokeWidth='';});
+    return;
+  }
+  const nearKeys=new Set([k]);
+  const nearEdges=new Set();
+  curPairs.forEach((p,i)=>{
+    if(p.a===k||p.b===k){nearKeys.add(p.a);nearKeys.add(p.b);nearEdges.add(i);}
+  });
+  Object.entries(nodeEls).forEach(([key,el])=>{
+    el.classList.toggle('faded',!nearKeys.has(key));
+    el.classList.toggle('hot',key===k);
+  });
+  let idx=0;
+  svg.querySelectorAll('line').forEach(l=>{
+    const isnear=l.dataset.a===k||l.dataset.b===k;
+    l.style.strokeOpacity=isnear?(TIER[curPairs[idx]?.tier]||TIER.recurring).opacity+.2:'.04';
+    l.style.strokeWidth=isnear?(+(TIER[curPairs[idx]?.tier]||TIER.recurring).width+1):'';
+    idx++;
+  });
+}
+
+/* --- pan/zoom --- */
+function applyT(){$('gcanvas').style.transform=`translate(${panX}px,${panY}px) scale(${zoom})`;}
+function fit(){
+  const wrap=$('graphwrap');
+  const s=Math.min(wrap.clientWidth/W,wrap.clientHeight/H)*0.93;
+  zoom=s; panX=(wrap.clientWidth-W*s)/2; panY=(wrap.clientHeight-H*s)/2; applyT();
+}
+function setupPanZoom(){
+  const wrap=$('graphwrap');
+  let down=false,sx=0,sy=0,ox=0,oy=0,moved=false;
+  wrap.addEventListener('mousedown',e=>{if(e.target.closest('.gnode'))return;down=true;moved=false;sx=e.clientX;sy=e.clientY;ox=panX;oy=panY;wrap.classList.add('drag');});
+  window.addEventListener('mousemove',e=>{if(!down)return;panX=ox+(e.clientX-sx);panY=oy+(e.clientY-sy);moved=true;applyT();});
+  window.addEventListener('mouseup',()=>{down=false;wrap.classList.remove('drag');});
+  wrap.addEventListener('wheel',e=>{e.preventDefault();const r=wrap.getBoundingClientRect();const mx=e.clientX-r.left,my=e.clientY-r.top;const f=e.deltaY<0?1.12:1/1.12;const nz=Math.max(.25,Math.min(4,zoom*f));panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;applyT();},{passive:false});
+  let td=false,tsx=0,tsy=0,tox=0,toy=0;
+  wrap.addEventListener('touchstart',e=>{if(e.target.closest('.gnode'))return;if(e.touches.length===1){td=true;tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;tox=panX;toy=panY;}},{passive:true});
+  wrap.addEventListener('touchmove',e=>{if(td&&e.touches.length===1){panX=tox+(e.touches[0].clientX-tsx);panY=toy+(e.touches[0].clientY-tsy);applyT();}},{passive:true});
+  wrap.addEventListener('touchend',()=>{td=false;});
+  $('zIn').onclick=()=>{const wrap=$('graphwrap');const r=wrap.getBoundingClientRect();const mx=wrap.clientWidth/2,my=wrap.clientHeight/2;const f=1.25;const nz=Math.min(4,zoom*f);panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;applyT();};
+  $('zOut').onclick=()=>{const wrap=$('graphwrap');const mx=wrap.clientWidth/2,my=wrap.clientHeight/2;const f=1/1.25;const nz=Math.max(.25,zoom*f);panX=mx-(mx-panX)*(nz/zoom);panY=my-(my-panY)*(nz/zoom);zoom=nz;applyT();};
+  $('zReset').onclick=fit;
+  window.addEventListener('resize',()=>{if(views.graph.classList.contains('on'))fit();});
+}
+
+/* slider */
+let sliderT;
+$('minN').addEventListener('input',e=>{
+  $('minNVal').textContent=e.target.value;
+  clearTimeout(sliderT); sliderT=setTimeout(()=>buildGraph(+e.target.value),320);
+});
+
+/* boot */
+setupPanZoom();
+buildGraphUI(); graphBuilt=true;
+T.watchReveals();
+})();
+</script>
+</body>
+</html>

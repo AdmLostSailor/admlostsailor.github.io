@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en" data-type="elegant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Terrapin Suite · Terrapin Ouroboros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Space+Grotesk:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="assets/terrapin.css" rel="stylesheet">
+<style>
+  .mv-intro{text-align:center;padding:46px 0 14px;max-width:720px;margin:0 auto}
+  .mv-intro h1{font-size:clamp(40px,6.5vw,76px);margin:10px 0 0}
+  .mv-intro p{color:var(--muted);font-size:18px;line-height:1.6;margin:16px 0 0}
+
+  .mv-layout{display:grid;grid-template-columns:248px 1fr;gap:40px;align-items:start;padding-bottom:70px}
+  @media(max-width:920px){.mv-layout{grid-template-columns:1fr;gap:0}}
+
+  /* rail */
+  .rail{position:sticky;top:84px;align-self:start}
+  @media(max-width:920px){
+    .rail{position:sticky;top:63px;z-index:200;display:flex;gap:8px;overflow-x:auto;
+      padding:12px 4px;background:rgba(10,6,22,.92);backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--line);margin:0 calc(-1*clamp(18px,4vw,44px))}
+    .rail::-webkit-scrollbar{display:none}
+    .rail-wheel{display:none}
+  }
+  .rail-wheel{position:relative;width:200px;height:200px;margin:0 auto 22px}
+  .rail-wheel .rw-hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:58px;height:58px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;
+    background:radial-gradient(circle,#3a235e,#160c2c 78%);border:1px solid rgba(243,198,79,.5);
+    font-family:var(--ui);font-size:9px;letter-spacing:.12em;color:var(--gold);box-shadow:0 0 20px rgba(160,123,255,.4)}
+  .rail-wheel .rw-dot{position:absolute;transform:translate(-50%,-50%);width:15px;height:15px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.4);transition:.2s;cursor:pointer}
+  .rail-wheel .rw-dot.active{width:23px;height:23px;box-shadow:0 0 18px currentColor}
+  .rail-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+  @media(max-width:920px){.rail-list{flex-direction:row;gap:6px}}
+  .rail-list li a{display:flex;align-items:center;gap:10px;padding:8px 11px;border-radius:9px;
+    font-family:var(--ui);font-size:13px;color:var(--muted);transition:.15s;white-space:nowrap}
+  .rail-list li a .rn{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--faint);min-width:26px}
+  .rail-list li a:hover{background:rgba(160,123,255,.1);color:var(--text)}
+  .rail-list li a.active{background:rgba(160,123,255,.12);color:var(--text)}
+  .rail-list li a.active .rn{color:var(--mc)}
+  @media(max-width:920px){.rail-list li a .rname{display:none}.rail-list li a{padding:9px 13px}.rail-list li a .rn{min-width:0}}
+
+  /* chapters */
+  .chapters{min-width:0}
+  .chapter{position:relative;padding:30px 0 46px;border-top:1px solid var(--line)}
+  .chapter:first-child{border-top:none;padding-top:8px}
+  .ch-num{font-family:var(--serif);font-weight:700;font-size:clamp(80px,15vw,150px);line-height:.8;
+    color:var(--mc);opacity:.16;margin-bottom:-.18em;pointer-events:none}
+  .chapter h2{font-size:clamp(32px,5.5vw,56px);margin:6px 0 0}
+  .ch-kick{font-family:var(--ui);font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:var(--mc)}
+  .ch-lead{font-size:clamp(18px,2.4vw,22px);line-height:1.5;color:var(--text);margin:16px 0 0;max-width:680px}
+  .ch-why{font-size:16.5px;line-height:1.65;color:var(--muted);margin:14px 0 0;max-width:680px}
+  .ch-meta{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin:22px 0 6px}
+  .ch-meta .cnt{font-family:var(--serif);font-size:34px;color:var(--mc);line-height:1}
+  .ch-meta .cnt span{font-family:var(--ui);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);display:block}
+  .oribar{flex:1 1 220px;min-width:200px}
+  .oribar .bar{display:flex;height:11px;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .oribar .bar i{height:100%}
+  .oribar .lbl{font-family:var(--ui);font-size:11px;color:var(--faint);margin-top:5px}
+  .ch-songs{margin-top:20px}
+  .ch-songs h4{font-family:var(--ui);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--teal);margin:0 0 10px}
+  .ch-songs .songlist{display:flex;flex-wrap:wrap;gap:7px}
+  .ch-songs .schip{font-family:var(--ui);font-size:13px;border:1px solid var(--line);border-radius:999px;
+    padding:7px 13px;color:var(--muted);background:rgba(160,123,255,.06);cursor:pointer;transition:.13s}
+  .ch-songs .schip:hover{color:var(--text);border-color:var(--mc);background:color-mix(in oklab,var(--mc) 16%,transparent)}
+  .ch-link{display:inline-flex;margin-top:18px}
+  /* hide On Stage strip in modal when opened from this page */
+  #songModal .os-wrap{display:none}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="mv-intro">
+    <div class="kicker gold">The Cycle as a Story</div>
+    <h1 class="display" id="suiteTitle" style="cursor:pointer;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:5px" title="Open complete suite analysis">The Terrapin Suite</h1>
+    <p>The Ouroboros is not a static diagram — it's a journey. Thirteen movements carry the pilgrim from the first invitation, out into exile and trial, and back again toward recognition and home. Walk them in order.</p>
+  </header>
+
+  <div class="mv-layout">
+    <aside class="rail">
+      <div class="rail-wheel" id="railWheel"><div class="rw-hub">TERRAPIN</div></div>
+      <ol class="rail-list" id="railList"></ol>
+    </aside>
+    <div class="chapters" id="chapters"></div>
+  </div>
+</main>
+
+<script src="data/terrapin_data.js"></script>
+<script src="data/terrapin_stats.js"></script>
+<script src="assets/terrapin.js"></script>
+<script>
+(function(){
+const T=window.Terra, MOVES=T.MOVEMENTS, esc=T.esc;
+const roman=name=>{const m=MOVES.find(x=>x.name===name);return m?m.roman:'';};
+const plain=name=>name;
+
+function oriBar(songs){
+  const counts={}; songs.forEach(s=>{if(s.directionality)counts[s.directionality]=(counts[s.directionality]||0)+1;});
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const tot=sorted.reduce((a,b)=>a+b[1],0)||1;
+  if(!sorted.length) return '';
+  const top=sorted.slice(0,3).map(([o])=>T.dirLabel(o)).join(' · ');
+  return `<div class="oribar"><div class="bar">${sorted.map(([o,n])=>`<i style="width:${n/tot*100}%;background:${T.dirColor(o)}" title="${esc(T.dirLabel(o))}: ${n}"></i>`).join('')}</div><div class="lbl">mostly: ${esc(top)}</div></div>`;
+}
+
+// chapters
+const chaptersEl=document.getElementById('chapters');
+chaptersEl.innerHTML=MOVES.map((m,i)=>{
+  const songs=(m.songs||[]).map(x=>T.songByKey(x.key)).filter(Boolean);
+  const def=T.movementDef(m.name);
+  const c=T.mvColor(i);
+  const songMatch=T.SONGS.find(s=>s.display_title===m.name||s.display_title.toLowerCase()===m.name.toLowerCase());
+  const h2Click=songMatch?`onclick="Terra.openSong('${esc(songMatch.song_key_norm)}')" style="cursor:pointer;text-decoration-line:underline;text-decoration-style:dotted;text-underline-offset:4px" title="Open song record"`:'';
+  return `<section class="chapter reveal" id="mv-${i}" style="--mc:${c}">
+    <div class="ch-num">${esc(m.roman)}</div>
+    <div class="ch-kick">Movement ${esc(m.roman)}</div>
+    <h2 class="display" ${h2Click}>${esc(m.name)}</h2>
+    ${def.body?`<p class="ch-lead">${esc(def.body)}</p>`:''}
+    <div class="ch-meta">
+      <div class="cnt">${songs.length}<span>songs</span></div>
+      ${oriBar(songs)}
+    </div>
+    <div class="ch-songs"><h4>Songs in this movement</h4>
+      <div class="songlist">${songs.map(s=>`<span class="schip" onclick="Terra.openSong('${esc(s.song_key_norm)}')">${esc(s.display_title)}</span>`).join('')}</div>
+    </div>
+    <a class="btn ch-link" href="map.html#mv=${i}">See this movement on the map →</a>
+  </section>`;
+}).join('');
+
+// rail list
+const railList=document.getElementById('railList');
+railList.innerHTML=MOVES.map((m,i)=>`<li><a href="#mv-${i}" data-i="${i}" style="--mc:${T.mvColor(i)}"><span class="rn">${esc(m.roman)}</span><span class="rname">${esc(m.name)}</span></a></li>`).join('');
+
+// rail wheel dots
+const rw=document.getElementById('railWheel');
+MOVES.forEach((m,i)=>{
+  const a=-Math.PI/2+2*Math.PI*i/MOVES.length;
+  const x=100+78*Math.cos(a), y=100+78*Math.sin(a);
+  const d=document.createElement('div'); d.className='rw-dot'; d.dataset.i=i;
+  d.style.cssText=`left:${x}px;top:${y}px;background:${T.mvColor(i)};color:${T.mvColor(i)}`;
+  d.title=plain(m.name);
+  d.addEventListener('click',()=>document.getElementById('mv-'+i).scrollIntoView({behavior:'smooth',block:'start'}));
+  rw.appendChild(d);
+});
+
+// active tracking
+function setActive(i){
+  railList.querySelectorAll('a').forEach(a=>a.classList.toggle('active',+a.dataset.i===i));
+  rw.querySelectorAll('.rw-dot').forEach(d=>d.classList.toggle('active',+d.dataset.i===i));
+}
+if('IntersectionObserver' in window){
+  const io=new IntersectionObserver(ents=>{
+    ents.forEach(e=>{if(e.isIntersecting) setActive(+e.target.id.split('-')[1]);});
+  },{rootMargin:'-30% 0px -55% 0px',threshold:0});
+  document.querySelectorAll('.chapter').forEach(c=>io.observe(c));
+}
+setActive(0);
+T.watchReveals();
+
+// Suite title → complete overview panel (3 tabs)
+const suiteTitle=document.getElementById('suiteTitle');
+if(suiteTitle){
+  suiteTitle.addEventListener('click',()=>{
+    const m=document.getElementById('songModal'); if(!m) return;
+    const D=T.D;
+    m.querySelector('#mhTitle').textContent='Terrapin Station Suite — The Complete Ouroboros';
+    m.querySelector('#mhMv').innerHTML='<span style="color:var(--gold)">●</span> All 13 Movements · Hunter / Garcia · 1977';
+    // mvList removed per user request
+    function mdToHtml(txt){
+      if(!txt) return '';
+      return txt.replace(/^#{1,3}\s+(.+)/gm,'<h4 style="font-family:var(--ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);margin:18px 0 6px">$1</h4>')
+        .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/\*([^*\n]+)\*/g,'<em>$1</em>')
+        .replace(/^---$/gm,'<hr style="border-color:var(--line);margin:12px 0">').split(/\n{2,}/)
+        .map(p=>p.startsWith('<h4')||p.startsWith('<hr')?p:'<p style="margin:.4em 0;font-size:14.5px;line-height:1.62;color:#d8cef0">'+p.replace(/\n/g,' ')+'</p>').join('');
+    }
+    const TS='font-family:var(--ui);font-size:12.5px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 16px;cursor:pointer;transition:.13s;flex:1', TON='color:var(--gold);border-bottom-color:var(--gold)';
+    m.querySelector('#mhBody').innerHTML=
+      ''+
+      '<div class="mcol-interp">'+
+        '<div style="display:flex;gap:0;margin-bottom:14px;border-bottom:1px solid var(--line)">'+
+          '<button style="'+TS+';'+TON+'" data-stab="ouro" onclick="suiteSwitchTab(\'ouro\')">The Ouroboros</button>'+
+          '<button style="'+TS+'" data-stab="threads" onclick="suiteSwitchTab(\'threads\')">Traveler Threads</button>'+
+          '<button style="'+TS+'" data-stab="folklore" onclick="suiteSwitchTab(\'folklore\')">Folklore</button>'+
+        '</div>'+
+        '<div id="sp-ouro">'+mdToHtml(D.suite_overview||'')+'</div>'+
+        '<div id="sp-threads" style="display:none">'+mdToHtml(D.suite_traveler_threads||'')+'</div>'+
+        '<div id="sp-folklore" style="display:none">'+mdToHtml(D.suite_folklore_overview||'')+'</div>'+
+      '</div>';
+    window.suiteSwitchTab=function(id){
+      document.querySelectorAll('[data-stab]').forEach(b=>b.setAttribute('style',TS));
+      const sel=document.querySelector('[data-stab="'+id+'"]'); if(sel) sel.setAttribute('style',TS+';'+TON);
+      ['ouro','threads','folklore'].forEach(k=>{const el=document.getElementById('sp-'+k);if(el)el.style.display=k===id?'block':'none';});
+    };
+    m.classList.add('open'); document.body.classList.add('no-scroll');
+    m.querySelector('#mhBody').scrollTop=0;
+  });
+}
+
+// smooth-scroll for rail links handled by CSS scroll-behavior + offset
+railList.querySelectorAll('a').forEach(a=>a.addEventListener('click',e=>{
+  e.preventDefault(); document.getElementById('mv-'+a.dataset.i).scrollIntoView({behavior:'smooth',block:'start'});
+}));
+})();
+</script>
+</body>
+</html>
