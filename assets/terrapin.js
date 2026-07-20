@@ -45,7 +45,7 @@ function injectSky(){
   sky.innerHTML='<div class="sky-rays"></div><div class="sky-neb"></div><div class="sky-stars"></div>';
   document.body.insertBefore(sky,document.body.firstChild);
 }
-const PAGES=[['index.html','Portal'],['map.html','Ouroboros Map'],['songs.html','Song Library'],['movements.html','The Terrapin Suite'],['cast.html','The Cast'],['segues.html','Segues'],['stats.html','On Stage'],['about.html','About']];
+const PAGES=[['index.html','Portal'],['map.html','Ouroboros Map'],['songs.html','Song Library'],['movements.html','The Terrapin Suite'],['compass.html','Compass'],['cast.html','The Cast'],['segues.html','Segues'],['stats.html','On Stage'],['about.html','About']];
 function injectNav(){
   if(document.querySelector('.nav')) return;
   let here=(location.pathname.split('/').pop()||'index.html');

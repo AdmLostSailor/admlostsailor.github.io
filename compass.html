@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en" data-type="elegant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Compass · Terrapin Ouroboros</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Space+Grotesk:wght@400;500;600&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<link href="assets/terrapin.css" rel="stylesheet">
+<style>
+.cp-head{padding:38px 0 8px;text-align:center}
+.cp-head h1{font-size:clamp(38px,6vw,68px);margin:8px 0 0}
+.cp-head p{color:var(--muted);font-size:17px;max-width:680px;margin:12px auto 0}
+.cp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:26px;padding:24px 0 70px;align-items:start}
+@media(max-width:980px){.cp-layout{grid-template-columns:1fr}}
+.cp-stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:20px;
+  padding:18px;backdrop-filter:blur(8px)}
+.cp-stage svg{width:100%;height:auto;display:block}
+.needle{cursor:pointer;transition:opacity .15s,filter .15s}
+.needle:hover{filter:brightness(1.5)}
+.mvlabel{font-family:var(--ui);font-weight:600;pointer-events:none}
+.mvroman{font-family:var(--ui);font-weight:700;opacity:.7}
+.cp-stage.dim .needle{opacity:.08}
+.cp-stage.dim .needle.hot{opacity:1;filter:brightness(1.6) drop-shadow(0 0 6px currentColor)}
+.hubtxt{font-family:var(--serif);font-weight:700;fill:var(--gold)}
+.hubsub{font-family:var(--ui);fill:var(--faint)}
+
+.cp-side{display:flex;flex-direction:column;gap:16px;position:sticky;top:80px}
+.cp-panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;backdrop-filter:blur(8px)}
+.cp-panel h4{font-family:var(--ui);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);
+  margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.cp-panel input,.cp-panel select{width:100%;font-family:var(--ui);font-size:14px;color:var(--text);
+  background:rgba(160,123,255,.08);border:1px solid var(--line);border-radius:10px;padding:10px 13px;
+  outline:none;margin-bottom:10px}
+.cp-panel input:focus,.cp-panel select:focus{border-color:var(--violet)}
+.dirfilters{display:flex;flex-wrap:wrap;gap:6px}
+.dirbtn{font-family:var(--ui);font-size:11.5px;letter-spacing:.01em;border-radius:999px;padding:6px 11px;
+  border:1px solid currentColor;background:transparent;transition:.14s;display:inline-flex;align-items:center;gap:5px}
+.dirbtn .sw{width:7px;height:7px;border-radius:50%;background:currentColor}
+.dirbtn.off{opacity:.28;filter:saturate(.5)}
+.cp-legend p{font-size:12.5px;color:var(--muted);line-height:1.55;margin:0 0 8px}
+.cp-legend .ring-key{display:flex;align-items:center;gap:8px;font-family:var(--ui);font-size:11.5px;color:var(--muted);margin-bottom:6px}
+.cp-legend .ring-key .rk-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.cp-count{font-family:var(--ui);font-size:12px;color:var(--faint);margin-top:2px}
+.detail-empty{font-family:var(--body);font-size:13.5px;color:var(--faint);font-style:italic;margin:0}
+.detail-title{font-family:var(--serif);font-weight:700;font-size:19px;color:var(--text);margin-bottom:6px;line-height:1.15}
+.detail-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.detail-sum{font-size:13px;line-height:1.55;color:#d8cef0;margin:0 0 12px}
+.detail-open{font-family:var(--ui);font-size:12.5px;color:var(--gold);background:rgba(243,198,79,.1);
+  border:1px solid var(--line-warm);border-radius:9px;padding:8px 13px;display:inline-block;transition:.15s}
+.detail-open:hover{background:rgba(243,198,79,.2)}
+</style>
+</head>
+<body>
+<main>
+  <header class="cp-head wrap">
+    <div class="kicker gold">Navigation Instrument</div>
+    <h1 class="display">The Terrapin Compass</h1>
+    <p>Every song, plotted by heading and distance. The <b>heading</b> is the movement it belongs to — nine bearings around the dial, in suite order. The <b>distance from the hub</b> is its directionality: how near the song sits to Terrapin, and whether its needle points home or away.</p>
+  </header>
+
+  <div class="wrap cp-layout">
+    <div class="cp-stage" id="stage">
+      <svg id="rose" viewBox="0 0 960 960" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="cp-side">
+      <div class="cp-panel">
+        <h4>Find a Song</h4>
+        <input id="q" type="search" placeholder="Search by title…" autocomplete="off">
+        <select id="mvSel"><option value="">All movements</option></select>
+        <div class="dirfilters" id="dirFilters"></div>
+        <div class="cp-count" id="count"></div>
+      </div>
+      <div class="cp-panel" id="detailPanel">
+        <h4>Reading</h4>
+        <p class="detail-empty">Hover or tap a needle to read its orientation.</p>
+      </div>
+      <div class="cp-panel cp-legend">
+        <h4>How to Read the Dial</h4>
+        <div class="ring-key"><span class="rk-dot" style="background:#f3c64f"></span>Within — already home, dwelling near the hub</div>
+        <div class="ring-key"><span class="rk-dot" style="background:#4ee0c6"></span>Toward — needle tip drawn in toward Terrapin</div>
+        <div class="ring-key"><span class="rk-dot" style="background:#ff7a3d"></span>Away — needle tip driven out toward the rim</div>
+        <div class="ring-key"><span class="rk-dot" style="background:#a07bff"></span>Ambiguous — hovering mid-distance, undecided</div>
+        <div class="ring-key"><span class="rk-dot" style="background:#6f8cff"></span>Instrumental — a wordless marker, no vector</div>
+        <p>The nine spokes are the movements of the suite, in order clockwise from the top. Click any needle to open the song's full profile.</p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="data/terrapin_data.js"></script>
+<script src="data/terrapin_stats.js"></script>
+<script src="assets/terrapin.js"></script>
+<script>
+(function(){
+const T=window.Terra, SONGS=T.CATALOG_SONGS, MOVEMENTS=T.MOVEMENTS, DIR_META=T.DIR_META, esc=T.esc;
+const $=id=>document.getElementById(id);
+const CX=480, CY=480, RIM=380, HUB=66;
+function hash(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h);}
+function rnd(key,salt){return (hash(key+salt)%10000)/10000;}
+function pt(r,theta){const rad=(theta-90)*Math.PI/180;return {x:CX+r*Math.cos(rad),y:CY+r*Math.sin(rad)};}
+
+const NM=MOVEMENTS.length||9;
+const thetaBase=idx=>idx*(360/NM);
+
+const activeDirs=new Set(Object.keys(DIR_META));
+let mvFilter='', query='';
+
+function needleGeom(song,theta){
+  const d=song.directionality;
+  const col=T.dirColor(d);
+  const jr=rnd(song.song_key_norm,'r');
+  if(d==='within'){
+    const r=94+jr*46;
+    return {type:'diamond',p:pt(r,theta),size:6.5,col};
+  }
+  if(d==='instrumental'){
+    const r=270+jr*24;
+    return {type:'diamond',p:pt(r,theta),size:6,col};
+  }
+  if(d==='ambiguous'){
+    const r0=196+jr*20, r1=r0+42;
+    return {type:'dbl',p0:pt(r0,theta),p1:pt(r1,theta),col};
+  }
+  if(d==='toward'){
+    const r0=352-jr*22, r1=150+jr*18;
+    return {type:'arrow',p0:pt(r0,theta),p1:pt(r1,theta),col,marker:'end'};
+  }
+  // away
+  const r0=150+jr*18, r1=352-jr*22;
+  return {type:'arrow',p0:pt(r0,theta),p1:pt(r1,theta),col,marker:'end'};
+}
+
+let defs=`<defs>
+  <marker id="a-toward" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#4ee0c6"/></marker>
+  <marker id="a-away" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#ff7a3d"/></marker>
+  <marker id="a-amb1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0L10,5L0,10z" fill="#a07bff"/></marker>
+  <marker id="a-amb0" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0L10,5L0,10z" fill="#a07bff"/></marker>
+</defs>`;
+
+let bg=`<circle cx="${CX}" cy="${CY}" r="${RIM}" fill="none" stroke="var(--line)" stroke-width="1"/>
+<circle cx="${CX}" cy="${CY}" r="140" fill="none" stroke="rgba(243,198,79,.14)" stroke-width="1" stroke-dasharray="3 5"/>
+<circle cx="${CX}" cy="${CY}" r="340" fill="none" stroke="rgba(255,122,61,.14)" stroke-width="1" stroke-dasharray="3 5"/>`;
+
+let spokes='', labels='';
+MOVEMENTS.forEach((m,idx)=>{
+  const th=thetaBase(idx);
+  const inner=pt(74,th), outer=pt(RIM,th);
+  const col=T.mvColor(idx);
+  spokes+=`<line x1="${inner.x}" y1="${inner.y}" x2="${outer.x}" y2="${outer.y}" stroke="rgba(160,123,255,.18)" stroke-width="1"/>`;
+  const lp=pt(432,th);
+  labels+=`<text x="${lp.x}" y="${lp.y-6}" text-anchor="middle" class="mvroman" font-size="13" fill="${col}">${esc(m.roman||idx+1)}</text>
+    <text x="${lp.x}" y="${lp.y+11}" text-anchor="middle" class="mvlabel" font-size="12.5" fill="${col}">${esc(m.name)}</text>`;
+});
+
+let hub=`<circle cx="${CX}" cy="${CY}" r="${HUB}" fill="url(#hubgrad)" stroke="rgba(243,198,79,.55)" stroke-width="1.5"/>
+<text x="${CX}" y="${CY-2}" text-anchor="middle" class="hubtxt" font-size="15">Terrapin</text>
+<text x="${CX}" y="${CY+15}" text-anchor="middle" class="hubsub" font-size="9.5">still center</text>`;
+defs=defs.replace('</defs>','<radialGradient id="hubgrad" cx="50%" cy="38%" r="70%"><stop offset="0%" stop-color="#3a235e"/><stop offset="100%" stop-color="#160c2c"/></radialGradient></defs>');
+
+let needles='';
+SONGS.forEach(s=>{
+  const mv=(s.primary_movements||[])[0];
+  const idx=T.mvIndex(mv);
+  if(idx<0) return;
+  const th=thetaBase(idx)+(rnd(s.song_key_norm,'t')-0.5)*30;
+  const g=needleGeom(s,th);
+  const key=s.song_key_norm, d=s.directionality;
+  const attrs=`class="needle" data-key="${esc(key)}" data-dir="${esc(d)}" data-mv="${esc(mv||'')}" data-title="${esc(s.display_title.toLowerCase())}"`;
+  if(g.type==='diamond'){
+    const sz=g.size;
+    needles+=`<rect ${attrs} x="${g.p.x-sz}" y="${g.p.y-sz}" width="${sz*2}" height="${sz*2}" transform="rotate(45 ${g.p.x} ${g.p.y})" fill="${g.col}" opacity=".82"/>`;
+  } else if(g.type==='dbl'){
+    needles+=`<line ${attrs} x1="${g.p0.x}" y1="${g.p0.y}" x2="${g.p1.x}" y2="${g.p1.y}" stroke="${g.col}" stroke-width="2" marker-start="url(#a-amb0)" marker-end="url(#a-amb1)" opacity=".8"/>`;
+  } else {
+    const mk=d==='toward'?'a-toward':'a-away';
+    needles+=`<line ${attrs} x1="${g.p0.x}" y1="${g.p0.y}" x2="${g.p1.x}" y2="${g.p1.y}" stroke="${g.col}" stroke-width="2" marker-end="url(#${mk})" opacity=".82"/>`;
+  }
+});
+
+$('rose').innerHTML=defs+bg+spokes+hub+labels+`<g id="needleLayer">${needles}</g>`;
+
+// movement select
+MOVEMENTS.forEach(m=>{const op=document.createElement('option');op.value=m.name;op.textContent=m.name;$('mvSel').appendChild(op);});
+// directionality filter buttons
+$('dirFilters').innerHTML=Object.keys(DIR_META).map(d=>`<button class="dirbtn" data-d="${d}" style="color:${DIR_META[d].color}"><span class="sw"></span>${T.dirLabel(d)}</button>`).join('');
+
+const stage=$('stage');
+const allNeedles=()=>Array.from(document.querySelectorAll('.needle'));
+
+function applyFilters(){
+  const q=query.trim().toLowerCase();
+  let anyFilter = !!q || !!mvFilter || activeDirs.size<Object.keys(DIR_META).length;
+  let visibleCount=0;
+  allNeedles().forEach(el=>{
+    const matchQ = !q || el.dataset.title.includes(q);
+    const matchMv = !mvFilter || el.dataset.mv===mvFilter;
+    const matchDir = activeDirs.has(el.dataset.dir);
+    const show = matchQ && matchMv && matchDir;
+    el.classList.toggle('hot', show);
+    if(show) visibleCount++;
+  });
+  stage.classList.toggle('dim', anyFilter);
+  $('count').textContent = anyFilter ? `${visibleCount} of ${allNeedles().length} songs match` : `${allNeedles().length} songs on the dial`;
+}
+applyFilters();
+
+let qt;
+$('q').addEventListener('input',()=>{query=$('q').value;clearTimeout(qt);qt=setTimeout(applyFilters,120);});
+$('mvSel').addEventListener('change',()=>{mvFilter=$('mvSel').value;applyFilters();});
+$('dirFilters').addEventListener('click',e=>{
+  const b=e.target.closest('.dirbtn'); if(!b) return;
+  const d=b.dataset.d;
+  if(activeDirs.has(d)){activeDirs.delete(d);b.classList.add('off');}
+  else{activeDirs.add(d);b.classList.remove('off');}
+  applyFilters();
+});
+
+function showDetail(key){
+  const s=T.songByKey(key); if(!s) return;
+  const mv=(s.primary_movements||[])[0];
+  $('detailPanel').innerHTML=`<h4>Reading</h4>
+    <div class="detail-title">${esc(s.display_title)}</div>
+    <div class="detail-chips">${T.mvChip(mv)}${T.dirChip(s.directionality)}</div>
+    ${s.interpretive_summary?`<p class="detail-sum">${esc(T.short(s.interpretive_summary,220))}</p>`:''}
+    <a class="detail-open" href="#" data-open="${esc(key)}">Open full profile →</a>`;
+  $('detailPanel').querySelector('[data-open]').addEventListener('click',ev=>{ev.preventDefault();T.openSong(key);});
+}
+
+document.getElementById('needleLayer').addEventListener('mouseover',e=>{
+  const el=e.target.closest('.needle'); if(!el) return;
+  showDetail(el.dataset.key);
+});
+document.getElementById('needleLayer').addEventListener('click',e=>{
+  const el=e.target.closest('.needle'); if(!el) return;
+  T.openSong(el.dataset.key);
+});
+})();
+</script>
+</body>
+</html>

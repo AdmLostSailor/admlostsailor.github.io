@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terrapin Ouroboros — Design Directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Space+Mono:wght@400;700&family=Monoton&family=Bungee&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#0e0c10}
+  /* ============ shared structural CSS for the wheel/emblem ============ */
+  .wheel{position:relative}
+  .wheel .ring{position:absolute;inset:0;border-radius:50%}
+  .wheel .hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center}
+  .wheel .mv{position:absolute;transform:translate(-50%,-50%);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;cursor:default}
+  .wheel .mvlbl{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none}
+  .wheel .dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%}
+  .wheel .spoke{position:absolute;height:1px;transform-origin:left center}
+
+  /* spin helpers */
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  @keyframes spinR{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+  @keyframes breathe{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.04)}}
+
+  /* ========================================================= */
+  /* DIRECTION A — SUNSET RAMBLE                               */
+  /* ========================================================= */
+  .dirA{--ink:#2a1808;--cream:#f3e7cd;--orange:#e0571c;--mag:#c02d63;--gold:#eba62b;--teal:#1f9b8e;
+    width:100%;height:100%;position:relative;overflow:hidden;background:var(--cream);
+    color:var(--ink);font-family:'Spectral',Georgia,serif}
+  .dirA .rays{position:absolute;left:50%;top:38%;width:1400px;height:1400px;transform:translate(-50%,-50%);
+    background:repeating-conic-gradient(from 0deg,rgba(224,87,28,.10) 0deg 9deg,transparent 9deg 18deg);
+    border-radius:50%;animation:spinSlow 90s linear infinite}
+  @keyframes spinSlow{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .dirA .vign{position:absolute;inset:0;background:radial-gradient(circle at 50% 36%,transparent 40%,rgba(42,24,8,.18) 100%)}
+  .dirA .kicker{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--mag)}
+  .dirA .word{font-family:'Bagel Fat One',system-ui;line-height:.86;letter-spacing:.01em}
+  .dirA .tag{font-style:italic;color:#7a5326}
+  .dirA .pill{font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.12em;
+    border:1.5px solid var(--ink);border-radius:999px;padding:8px 16px;background:transparent;color:var(--ink);
+    display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:.15s}
+  .dirA .pill:hover{background:var(--ink);color:var(--cream)}
+  .dirA .pill.solid{background:var(--orange);border-color:var(--orange);color:#fff}
+  .dirA .pill.solid:hover{background:var(--mag);border-color:var(--mag)}
+  /* wheel A */
+  .dirA .ring{border:7px solid rgba(42,24,8,.16);box-shadow:inset 0 0 60px rgba(224,87,28,.10)}
+  .dirA .hub{background:radial-gradient(circle,var(--orange),var(--mag));color:#fff;border:3px solid var(--cream);
+    box-shadow:0 0 0 3px var(--orange),0 10px 30px rgba(192,45,99,.4);font-family:'Bagel Fat One';animation:breathe 7s ease-in-out infinite}
+  .dirA .mv{border:3px solid var(--cream);box-shadow:0 6px 16px rgba(42,24,8,.28)}
+  .dirA .mvlbl{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--ink);text-shadow:0 1px 0 var(--cream)}
+  .dirA .spoke{background:rgba(42,24,8,.14)}
+
+  /* ========================================================= */
+  /* DIRECTION B — LIQUID LIGHT                                */
+  /* ========================================================= */
+  .dirB{position:relative;width:100%;height:100%;overflow:hidden;background:#08040e;color:#fff;font-family:'DM Sans',system-ui}
+  .dirB .swirl{position:absolute;left:50%;top:50%;width:200%;height:200%;transform:translate(-50%,-50%);
+    background:conic-gradient(from 0deg,#ff2d6b,#ff8a00,#ffe600,#27e36a,#00d4ff,#7b5cff,#ff2d6b);
+    filter:blur(8px) saturate(1.3);opacity:.9;animation:bspin 26s linear infinite}
+  @keyframes bspin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  .dirB .melt{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,transparent 8%,rgba(8,4,14,.55) 34%,#08040e 74%)}
+  .dirB .grain{position:absolute;inset:0;mix-blend-mode:overlay;opacity:.5;
+    background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.10),transparent 40%)}
+  .dirB .kicker{font-family:'Bungee',system-ui;font-size:12px;letter-spacing:.32em;text-transform:uppercase;
+    background:linear-gradient(90deg,#ffe600,#27e36a,#00d4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .dirB .word{font-family:'Monoton',system-ui;line-height:.96;letter-spacing:.02em;
+    background:linear-gradient(120deg,#ff2d6b,#ff8a00 30%,#ffe600 50%,#27e36a 68%,#00d4ff 85%,#7b5cff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 2px 14px rgba(255,45,107,.5))}
+  .dirB .glassbtn{font-family:'Bungee',system-ui;font-size:12px;letter-spacing:.06em;text-transform:uppercase;
+    border:1.5px solid rgba(255,255,255,.5);border-radius:999px;padding:11px 20px;color:#fff;
+    background:rgba(255,255,255,.08);backdrop-filter:blur(6px);cursor:pointer;transition:.15s}
+  .dirB .glassbtn:hover{background:rgba(255,255,255,.2);border-color:#fff;transform:translateY(-1px)}
+  .dirB .glassbtn.solid{background:linear-gradient(90deg,#ff2d6b,#ff8a00);border:none;color:#fff;box-shadow:0 8px 24px rgba(255,45,107,.5)}
+  /* wheel B */
+  .dirB .ring{border:2px solid rgba(255,255,255,.25);box-shadow:0 0 50px rgba(123,92,255,.4) inset}
+  .dirB .ring.r2{inset:34px;border:1px dashed rgba(255,255,255,.18)}
+  .dirB .hub{color:#fff;font-family:'Bungee';
+    background:conic-gradient(from 0deg,#ff2d6b,#ff8a00,#ffe600,#27e36a,#00d4ff,#7b5cff,#ff2d6b);
+    box-shadow:0 0 40px rgba(255,255,255,.4);animation:breathe 5s ease-in-out infinite}
+  .dirB .mv{color:#08040e;font-family:'Bungee';font-weight:700;box-shadow:0 0 18px rgba(255,255,255,.45)}
+  .dirB .mvlbl{font-family:'DM Sans';font-weight:700;font-size:10px;color:#fff;text-shadow:0 1px 6px #000}
+  .dirB .spoke{background:rgba(255,255,255,.18)}
+
+  /* ========================================================= */
+  /* DIRECTION C — COSMIC MYTHOS                               */
+  /* ========================================================= */
+  .dirC{position:relative;width:100%;height:100%;overflow:hidden;color:#ece7fb;font-family:'Spectral',Georgia,serif;
+    background:radial-gradient(circle at 50% 22%,#251147 0,#160c2c 46%,#0c0719 100%)}
+  .dirC .neb{position:absolute;left:50%;top:30%;width:1100px;height:1100px;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 38% 40%,rgba(160,123,255,.30),transparent 55%),
+      radial-gradient(circle at 64% 58%,rgba(78,224,198,.22),transparent 55%);
+    filter:blur(20px);animation:drift 28s ease-in-out infinite}
+  @keyframes drift{0%,100%{transform:translate(-50%,-50%) rotate(0deg) scale(1)}50%{transform:translate(-52%,-48%) rotate(8deg) scale(1.08)}}
+  .dirC .stars{position:absolute;inset:0;background-image:
+    radial-gradient(1.4px 1.4px at 20% 30%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 70% 22%,#cdbcff,transparent),
+    radial-gradient(1.6px 1.6px at 44% 64%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 84% 70%,#9ff3e2,transparent),
+    radial-gradient(1.3px 1.3px at 12% 80%,#fff,transparent),
+    radial-gradient(1.1px 1.1px at 58% 84%,#fff,transparent);
+    opacity:.8;animation:tw 6s ease-in-out infinite}
+  @keyframes tw{0%,100%{opacity:.45}50%{opacity:.9}}
+  .dirC .kicker{font-family:'Space Grotesk',sans-serif;font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:#4ee0c6}
+  .dirC .word{font-family:'Cormorant Garamond',serif;font-weight:600;line-height:.92;letter-spacing:.005em}
+  .dirC .word em{font-style:italic;color:#f3c64f}
+  .dirC .tag{font-family:'Spectral';font-style:italic;color:#b3a7d6}
+  .dirC .pill{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:.02em;
+    border:1px solid rgba(160,123,255,.5);border-radius:8px;padding:10px 18px;color:#ece7fb;
+    background:rgba(160,123,255,.08);cursor:pointer;transition:.15s}
+  .dirC .pill:hover{background:rgba(160,123,255,.2);border-color:#a07bff}
+  .dirC .pill.solid{background:linear-gradient(90deg,#4ee0c6,#a07bff);border:none;color:#0c0719;font-weight:600}
+  /* wheel C */
+  .dirC .ring{border:1px solid rgba(160,123,255,.4);box-shadow:0 0 70px rgba(78,224,198,.12) inset}
+  .dirC .hub{background:radial-gradient(circle,#2a1a52,#160c2c 76%);color:#f3c64f;border:1px solid rgba(243,198,79,.5);
+    box-shadow:0 0 30px rgba(160,123,255,.4);font-family:'Cormorant Garamond';font-weight:700;animation:breathe 8s ease-in-out infinite}
+  .dirC .mv{border:1px solid rgba(255,255,255,.4);box-shadow:0 0 18px rgba(78,224,198,.35)}
+  .dirC .mvlbl{font-family:'Space Grotesk',sans-serif;font-size:9.5px;font-weight:500;letter-spacing:.04em;color:#cdbcff;text-shadow:0 1px 4px #000}
+  .dirC .spoke{background:rgba(160,123,255,.25)}
+
+  /* content-card shared */
+  .ccard{width:100%;height:100%;overflow:hidden;position:relative}
+  .ccard .scrollpad{padding:34px 34px 40px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useMemo } = React;
+
+const MOVES = [
+  "I · Lady With A Fan","II · Terrapin Station","III · At A Siding",
+  "IV · Return To Terrapin","V · Ivory Wheels","VI · And I Know You",
+  "VII · Jack O'Roses","VIII · Leaving Terrapin","IX · Recognition"
+];
+const PAL = ['#e0571c','#eba62b','#c02d63','#1f9b8e','#4d98ea','#7b5cff','#27e36a','#ff8a00','#00d4ff'];
+
+// Shared wheel — same structure, themed by parent .dirA/.dirB/.dirC scope
+function Wheel({ size=560, theme }){
+  const cx=size/2, cy=size/2;
+  const rx=size*0.37, ry=size*0.37;
+  const hub=size*0.20, mv=size*0.092;
+  const nodes = useMemo(()=>MOVES.map((m,i)=>{
+    const a=-Math.PI/2 + 2*Math.PI*i/9;
+    return {m,i,a,x:cx+rx*Math.cos(a),y:cy+ry*Math.sin(a)};
+  }),[size]);
+  // a few song dots per node
+  const dots=[];
+  nodes.forEach(n=>{
+    const k=3+(n.i%4);
+    for(let j=0;j<k;j++){
+      const aa=n.a+(j-k/2)*0.34;
+      const r=mv*0.7+ (j+1)*7;
+      dots.push({x:n.x+r*Math.cos(aa),y:n.y+r*0.8*Math.sin(aa),c:PAL[n.i]});
+    }
+  });
+  return (
+    <div className="wheel" style={{width:size,height:size}}>
+      <div className="ring"></div>
+      {theme==='B' && <div className="ring r2"></div>}
+      {nodes.map(n=>{
+        const dx=n.x-cx, dy=n.y-cy, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)*180/Math.PI;
+        return <div key={'s'+n.i} className="spoke" style={{left:cx,top:cy,width:len,transform:`rotate(${ang}deg)`}}></div>;
+      })}
+      {dots.map((d,i)=><div key={'d'+i} className="dot" style={{left:d.x,top:d.y,width:6,height:6,background:d.c,opacity:.85}}></div>)}
+      {nodes.map(n=>(
+        <React.Fragment key={n.i}>
+          <div className="mv" style={{left:n.x,top:n.y,width:mv,height:mv,background:PAL[n.i],
+            fontFamily:"'Space Mono',monospace",fontSize:size*0.026,fontWeight:700,
+            color:theme==='B'?'#08040e':'#fff'}}>{n.m.split(' · ')[0]}</div>
+          <div className="mvlbl" style={{left:n.x+(mv*0.62+34)*Math.cos(n.a),top:n.y+(mv*0.62+22)*Math.sin(n.a)}}>
+            {n.m.split(' · ')[1]}</div>
+        </React.Fragment>
+      ))}
+      <div className="hub" style={{width:hub,height:hub,fontSize:size*0.05,lineHeight:1.05}}>Terrapin</div>
+    </div>
+  );
+}
+
+/* ============================ DIRECTION A ============================ */
+function PortalA(){
+  return (
+    <div className="dirA">
+      <div className="rays"></div><div className="vign"></div>
+      <div style={{position:'relative',padding:'70px 64px',height:'100%',display:'flex',flexDirection:'column'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div className="kicker">A Mythic Atlas of the Songworld</div>
+          <div style={{display:'flex',gap:24,fontFamily:"'Space Mono',monospace",fontSize:12,letterSpacing:'.1em',textTransform:'uppercase',color:'#7a5326'}}>
+            <span>Map</span><span>Songs</span><span>Movements</span><span>About</span>
+          </div>
+        </div>
+        <div style={{margin:'auto 0',maxWidth:760}}>
+          <div className="word" style={{fontSize:108}}>Terrapin</div>
+          <div className="word" style={{fontSize:92,color:'var(--mag)',marginTop:-6}}>Ouroboros</div>
+          <p className="tag" style={{fontSize:21,lineHeight:1.5,maxWidth:560,marginTop:22}}>
+            222 Grateful Dead songs as a single self-devouring circle — every one of them
+            moving <em>toward, away, through,</em> or <em>back to</em> the station at the center.</p>
+          <div style={{display:'flex',gap:14,marginTop:30,flexWrap:'wrap'}}>
+            <button className="pill solid">Enter the Ouroboros →</button>
+            <button className="pill">The Nine Movements</button>
+            <button className="pill">Song Library</button>
+          </div>
+        </div>
+        <div style={{position:'absolute',right:54,top:'50%',transform:'translateY(-50%)',opacity:.95}}>
+          <Wheel size={300} theme="A"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+function MapA(){
+  return (
+    <div className="dirA" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div className="rays"></div><div className="vign"></div>
+      <div style={{position:'absolute',top:26,left:30}} className="kicker">The Ouroboros · 9 Movements · 222 Songs</div>
+      <Wheel size={600} theme="A"/>
+      <div style={{position:'absolute',bottom:22,left:30,fontFamily:"'Space Mono',monospace",fontSize:11,color:'#7a5326'}}>
+        hover a movement to glow · click to drill in · click a dot to open a song</div>
+    </div>
+  );
+}
+function CardA(){
+  return (
+    <div className="dirA ccard"><div className="rays" style={{opacity:.5}}></div>
+      <div className="scrollpad" style={{position:'relative'}}>
+        <div className="kicker">Movement IV</div>
+        <div className="word" style={{fontSize:46,marginTop:10,color:'var(--orange)'}}>Return to<br/>Terrapin</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',margin:'18px 0 4px'}}>
+          <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,textTransform:'uppercase',letterSpacing:'.1em',background:'var(--teal)',color:'#fff',borderRadius:999,padding:'6px 13px'}}>returning ↺</span>
+          <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,textTransform:'uppercase',letterSpacing:'.1em',border:'1.5px solid var(--ink)',borderRadius:999,padding:'6px 13px'}}>recognizing</span>
+          <span style={{fontFamily:"'Space Mono',monospace",fontSize:11,textTransform:'uppercase',letterSpacing:'.1em',border:'1.5px solid var(--ink)',borderRadius:999,padding:'6px 13px'}}>26 songs</span>
+        </div>
+        <p style={{fontSize:17,lineHeight:1.62,marginTop:18}}>The wanderer turns homeward. These songs gather the long arc of coming
+          back — not as the one who left, but as someone the road has changed.</p>
+        <h3 style={{fontFamily:"'Space Mono',monospace",fontSize:12,letterSpacing:'.2em',textTransform:'uppercase',color:'var(--mag)',margin:'24px 0 8px'}}>Mythic Function</h3>
+        <p style={{fontSize:15.5,lineHeight:1.6,fontStyle:'italic',color:'#5e4222'}}>The movement enacts the second half of the circle: the pilgrim's
+          orientation flips from departure to return, and the station begins, faintly, to come back into view.</p>
+        <div style={{marginTop:22,borderTop:'1.5px dashed rgba(42,24,8,.3)',paddingTop:16}}>
+          <div style={{fontFamily:"'Space Mono',monospace",fontSize:11,color:'#7a5326',marginBottom:10}}>SONGS IN THIS MOVEMENT</div>
+          {['Brokedown Palace','Ripple','Box of Rain','Stella Blue'].map(s=>
+            <span key={s} style={{display:'inline-block',fontFamily:"'Spectral'",fontSize:14,border:'1px solid rgba(42,24,8,.3)',borderRadius:999,padding:'5px 13px',margin:'0 6px 6px 0'}}>{s}</span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ DIRECTION B ============================ */
+function PortalB(){
+  return (
+    <div className="dirB">
+      <div className="swirl"></div><div className="melt"></div><div className="grain"></div>
+      <div style={{position:'relative',padding:'64px',height:'100%',display:'flex',flexDirection:'column',alignItems:'center',textAlign:'center'}}>
+        <div className="kicker">Tune In · Turn On · Trip Through The Songworld</div>
+        <div className="word" style={{fontSize:84,marginTop:'auto'}}>TERRAPIN</div>
+        <div className="word" style={{fontSize:52,marginTop:4}}>OUROBOROS</div>
+        <p style={{fontSize:18,lineHeight:1.5,maxWidth:520,marginTop:22,color:'rgba(255,255,255,.92)'}}>
+          A kaleidoscope of 222 songs spiraling around one eternal center. Dive in
+          and let the circle pull you home.</p>
+        <div style={{display:'flex',gap:14,marginTop:30,flexWrap:'wrap',justifyContent:'center'}}>
+          <button className="glassbtn solid">Enter the Trip ✦</button>
+          <button className="glassbtn">Nine Movements</button>
+          <button className="glassbtn">Songs</button>
+        </div>
+        <div style={{marginTop:'auto',opacity:.95}}><Wheel size={188} theme="B"/></div>
+      </div>
+    </div>
+  );
+}
+function MapB(){
+  return (
+    <div className="dirB" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div className="swirl" style={{opacity:.55}}></div><div className="melt"></div>
+      <div style={{position:'absolute',top:24,left:28}} className="kicker">The Spiral · 9 · 222</div>
+      <Wheel size={600} theme="B"/>
+      <div style={{position:'absolute',bottom:20,left:28,fontFamily:"'DM Sans'",fontWeight:500,fontSize:12,color:'rgba(255,255,255,.7)'}}>
+        the whole thing breathes · hover to bloom · click to dive deeper</div>
+    </div>
+  );
+}
+function CardB(){
+  return (
+    <div className="dirB ccard"><div className="swirl" style={{opacity:.4}}></div><div className="melt"></div>
+      <div className="scrollpad" style={{position:'relative'}}>
+        <div className="kicker">Movement IV</div>
+        <div className="word" style={{fontSize:38,marginTop:10}}>RETURN TO<br/>TERRAPIN</div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',margin:'18px 0 4px'}}>
+          {[['returning ↺','#27e36a'],['recognizing','#00d4ff'],['26 songs','#ff8a00']].map(([t,c])=>
+            <span key={t} style={{fontFamily:"'Bungee'",fontSize:10,textTransform:'uppercase',letterSpacing:'.04em',
+              background:c,color:'#08040e',borderRadius:999,padding:'6px 13px'}}>{t}</span>)}
+        </div>
+        <p style={{fontSize:16,lineHeight:1.6,marginTop:18,color:'rgba(255,255,255,.92)'}}>The wanderer turns homeward. These songs gather the long arc of coming
+          back — not as the one who left, but as someone the road has changed.</p>
+        <h3 style={{fontFamily:"'Bungee'",fontSize:12,letterSpacing:'.04em',textTransform:'uppercase',margin:'24px 0 8px',
+          background:'linear-gradient(90deg,#ffe600,#27e36a)',WebkitBackgroundClip:'text',backgroundClip:'text',color:'transparent'}}>Mythic Function</h3>
+        <p style={{fontSize:15,lineHeight:1.6,color:'rgba(255,255,255,.8)'}}>The movement enacts the second half of the circle: the pilgrim's
+          orientation flips from departure to return, and the station begins to come back into view.</p>
+        <div style={{marginTop:22,borderTop:'1px solid rgba(255,255,255,.2)',paddingTop:16}}>
+          <div style={{fontFamily:"'Bungee'",fontSize:10,color:'rgba(255,255,255,.6)',marginBottom:10,letterSpacing:'.04em'}}>SONGS IN THIS MOVEMENT</div>
+          {['Brokedown Palace','Ripple','Box of Rain','Stella Blue'].map(s=>
+            <span key={s} style={{display:'inline-block',fontFamily:"'DM Sans'",fontWeight:500,fontSize:13,border:'1px solid rgba(255,255,255,.35)',borderRadius:999,padding:'5px 13px',margin:'0 6px 6px 0'}}>{s}</span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ DIRECTION C ============================ */
+function PortalC(){
+  return (
+    <div className="dirC">
+      <div className="neb"></div><div className="stars"></div>
+      <div style={{position:'relative',padding:'72px 64px',height:'100%',display:'flex',flexDirection:'column'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div className="kicker">An Interpretive Atlas</div>
+          <div style={{display:'flex',gap:26,fontFamily:"'Space Grotesk'",fontSize:12.5,letterSpacing:'.05em',color:'#b3a7d6'}}>
+            <span>Map</span><span>Songs</span><span>Movements</span><span>About</span>
+          </div>
+        </div>
+        <div style={{margin:'auto 0',maxWidth:720}}>
+          <div className="word" style={{fontSize:104}}>Terrapin</div>
+          <div className="word" style={{fontSize:104,marginTop:-14}}><em>Ouroboros</em></div>
+          <p className="tag" style={{fontSize:21,lineHeight:1.55,maxWidth:540,marginTop:24}}>
+            The Grateful Dead songworld read as a single self-devouring circle —
+            every song a gesture toward the still point at its center.</p>
+          <div style={{display:'flex',gap:14,marginTop:32,flexWrap:'wrap'}}>
+            <button className="pill solid">Enter the Ouroboros →</button>
+            <button className="pill">The Nine Movements</button>
+            <button className="pill">Song Library</button>
+          </div>
+        </div>
+        <div style={{position:'absolute',right:48,top:'50%',transform:'translateY(-50%)',opacity:.96}}>
+          <Wheel size={310} theme="C"/>
+        </div>
+      </div>
+    </div>
+  );
+}
+function MapC(){
+  return (
+    <div className="dirC" style={{display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div className="neb"></div><div className="stars"></div>
+      <div style={{position:'absolute',top:26,left:30}} className="kicker">The Ouroboros · IX Movements · 222 Songs</div>
+      <Wheel size={600} theme="C"/>
+      <div style={{position:'absolute',bottom:22,left:30,fontFamily:"'Space Grotesk'",fontSize:11.5,color:'#b3a7d6'}}>
+        hover a movement to illuminate · click to enter · click a star to open a song</div>
+    </div>
+  );
+}
+function CardC(){
+  return (
+    <div className="dirC ccard"><div className="neb" style={{opacity:.6}}></div><div className="stars"></div>
+      <div className="scrollpad" style={{position:'relative'}}>
+        <div className="kicker">Movement IV</div>
+        <div className="word" style={{fontSize:52,marginTop:12}}>Return to <em>Terrapin</em></div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap',margin:'20px 0 4px'}}>
+          <span style={{fontFamily:"'Space Grotesk'",fontSize:11.5,letterSpacing:'.02em',background:'linear-gradient(90deg,#4ee0c6,#a07bff)',color:'#0c0719',fontWeight:600,borderRadius:7,padding:'6px 13px'}}>returning ↺</span>
+          <span style={{fontFamily:"'Space Grotesk'",fontSize:11.5,border:'1px solid rgba(160,123,255,.5)',borderRadius:7,padding:'6px 13px',color:'#cdbcff'}}>recognizing</span>
+          <span style={{fontFamily:"'Space Grotesk'",fontSize:11.5,border:'1px solid rgba(160,123,255,.5)',borderRadius:7,padding:'6px 13px',color:'#cdbcff'}}>26 songs</span>
+        </div>
+        <p style={{fontSize:17.5,lineHeight:1.64,marginTop:18}}>The wanderer turns homeward. These songs gather the long arc of coming
+          back — not as the one who left, but as someone the road has changed.</p>
+        <h3 style={{fontFamily:"'Space Grotesk'",fontSize:11.5,letterSpacing:'.2em',textTransform:'uppercase',color:'#4ee0c6',margin:'26px 0 8px'}}>Mythic Function</h3>
+        <p style={{fontSize:16,lineHeight:1.62,fontStyle:'italic',color:'#b3a7d6'}}>The movement enacts the second half of the circle: the pilgrim's
+          orientation flips from departure to return, and the station begins, faintly, to come back into view.</p>
+        <div style={{marginTop:24,borderTop:'1px solid rgba(160,123,255,.3)',paddingTop:16}}>
+          <div style={{fontFamily:"'Space Grotesk'",fontSize:11,letterSpacing:'.16em',color:'#8579ad',marginBottom:10}}>SONGS IN THIS MOVEMENT</div>
+          {['Brokedown Palace','Ripple','Box of Rain','Stella Blue'].map(s=>
+            <span key={s} style={{display:'inline-block',fontFamily:"'Spectral'",fontSize:14.5,border:'1px solid rgba(160,123,255,.35)',borderRadius:8,padding:'5px 13px',margin:'0 6px 6px 0',color:'#ece7fb'}}>{s}</span>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================ CANVAS ============================ */
+function App(){
+  return (
+    <DesignCanvas>
+      <DCSection id="a" title="Direction A · Sunset Ramble"
+        subtitle="Warm Fillmore-poster world — cream paper, hot orange/magenta/gold/teal, fat groovy display + literary serif. Sunburst motion, gentle breathing wheel.">
+        <DCArtboard id="a-portal" label="Portal" width={1180} height={760}><PortalA/></DCArtboard>
+        <DCArtboard id="a-map" label="Ouroboros Map" width={760} height={760}><MapA/></DCArtboard>
+        <DCArtboard id="a-card" label="Movement / Content" width={540} height={760}><CardA/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="b" title="Direction B · Liquid Light"
+        subtitle="Full trip — animated rainbow swirl over black, melting Monoton wordmark, Bungee accents. Maximal motion, the whole page breathes and rotates.">
+        <DCArtboard id="b-portal" label="Portal" width={1180} height={760}><PortalB/></DCArtboard>
+        <DCArtboard id="b-map" label="Ouroboros Map" width={760} height={760}><MapB/></DCArtboard>
+        <DCArtboard id="b-card" label="Movement / Content" width={540} height={760}><CardB/></DCArtboard>
+      </DCSection>
+
+      <DCSection id="c" title="Direction C · Cosmic Mythos"
+        subtitle="Refined & literary — deep indigo/violet night, neon teal/violet/gold, elegant Cormorant serif. Drifting nebula, twinkling stars. Bridges from the current dark dashboard.">
+        <DCArtboard id="c-portal" label="Portal" width={1180} height={760}><PortalC/></DCArtboard>
+        <DCArtboard id="c-map" label="Ouroboros Map" width={760} height={760}><MapC/></DCArtboard>
+        <DCArtboard id="c-card" label="Movement / Content" width={540} height={760}><CardC/></DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
