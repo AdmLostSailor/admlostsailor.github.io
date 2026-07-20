@@ -25,6 +25,6 @@ An interpretive atlas of the Grateful Dead songworld, read as a single circle or
 
 ## Data model
 
-See **`FIELD_GUIDE.md`** for a plain-language tour of every field and what it's for, **`DATA_SCHEMA.md`** for the exact structure/types the pages read, and **`GENERATION_PROMPT.md`** for the LLM prompt used to generate new song records against this schema.
+See **`FIELD_GUIDE.md`** for a plain-language tour of every field and what it's for, **`DATA_SCHEMA.md`** for the exact structure/types the pages read.
 
 The one rule tying it all together: **every file joins on `song_key_norm`**, the stable unique ID for a song.
