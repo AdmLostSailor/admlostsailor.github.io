@@ -232,6 +232,9 @@ document.getElementById('needleLayer').addEventListener('mouseover',e=>{
   const el=e.target.closest('.needle'); if(!el) return;
   showDetail(el.dataset.key);
 });
+document.getElementById('needleLayer').addEventListener('mouseleave',()=>{
+  $('detailPanel').innerHTML=`<h4>Reading</h4><p class="detail-empty">Hover or tap a needle to read its orientation.</p>`;
+});
 document.getElementById('needleLayer').addEventListener('click',e=>{
   const el=e.target.closest('.needle'); if(!el) return;
   T.openSong(el.dataset.key);
