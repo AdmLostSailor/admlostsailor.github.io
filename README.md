@@ -1,6 +1,6 @@
 # The Terrapin Ouroboros Project
 
-An interpretive atlas of the Grateful Dead songworld, read as a single circle orbiting one still center: **Terrapin**. Every song is placed by which of the 9 movements of the *Terrapin* suite it belongs to, and by its directionality — toward, within, away, ambiguous, or instrumental — relative to that center.
+An interpretive atlas of the Grateful Dead songworld, read as a single circle orbiting one still center: **Terrapin**. Every song is placed by which of the 13 movements of the *Terrapin* suite it belongs to, and by its directionality — toward, within, away, ambiguous, or instrumental — relative to that center.
 
 ## Pages
 
@@ -21,7 +21,6 @@ An interpretive atlas of the Grateful Dead songworld, read as a single circle or
 - **`data/terrapin_data.js`** — the core dataset (`TERRAPIN_DATA`): songs, movements, archetypes, ATU/motif cross-references, explanations.
 - **`data/terrapin_stats.js`** — live performance stats (`TERRAPIN_STATS`).
 - Setlist data (`TERRAPIN_SHOWS`) powers the map/stats drill-downs.
-- **`Terrapin Ouroboros - Standalone.html`** — a self-contained offline build of the site.
 
 ## Data model
 
